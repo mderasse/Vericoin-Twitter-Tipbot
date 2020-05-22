@@ -25,7 +25,7 @@ body
     width:75%;
 }
 
-.nano-button
+.coin-button
 {
     background-color: rgb(0, 12, 63);
     color: white;
@@ -44,12 +44,12 @@ body
     fill: white;
 }
 
-.nano-button:hover .st0
+.coin-button:hover .st0
 {
     fill: #ea891f;
 }
 
-.nano-button:hover
+.coin-button:hover
 {
     cursor: pointer;
 }
@@ -83,7 +83,7 @@ body
     padding-top: 50px;
 }
 
-.nano-button-container
+.coin-button-container
 {
     text-align: center;
 }
@@ -99,12 +99,12 @@ body
     max-width: 500px;
 }
 
-.nano-tooltip {
+.coin-tooltip {
   position: relative;
   display: inline-block;
 }
 
-.nano-tooltip .nano-tooltiptext {
+.coin-tooltip .coin-tooltiptext {
   visibility: hidden;
   width: 120px;
   background-color: #686868;
@@ -121,15 +121,15 @@ body
 
 }
 
-.nano-tooltip:hover .nano-tooltiptext {
+.coin-tooltip:hover .coin-tooltiptext {
   visibility: visible;
 }
 
-.nano-tooltip:hover {
+.coin-tooltip:hover {
     cursor: pointer;
 }
 
-.nano-tooltip .nano-tooltiptext::after {
+.coin-tooltip .coin-tooltiptext::after {
   content: " ";
   position: absolute;
   top: 50%;
@@ -140,32 +140,32 @@ body
   border-color: transparent transparent transparent #686868;
 }
 
-.nano-form {
+.coin-form {
 	margin:10px auto;
 	max-width: 400px;
 	padding: 20px 12px 10px 20px;
 	font: 13px "Lucida Sans Unicode", "Lucida Grande", sans-serif;
 }
-.nano-form li {
+.coin-form li {
 	padding: 0;
 	display: block;
 	list-style: none;
 	margin: 10px 0 0 0;
 }
-.nano-form label{
+.coin-form label{
 	margin:0 0 3px 0;
 	padding:0px;
 	display:block;
 	font-weight: bold;
 }
-.nano-form input[type=text],
-.nano-form input[type=date],
-.nano-form input[type=datetime],
-.nano-form input[type=number],
-.nano-form input[type=search],
-.nano-form input[type=time],
-.nano-form input[type=url],
-.nano-form input[type=email],
+.coin-form input[type=text],
+.coin-form input[type=date],
+.coin-form input[type=datetime],
+.coin-form input[type=number],
+.coin-form input[type=search],
+.coin-form input[type=time],
+.coin-form input[type=url],
+.coin-form input[type=email],
 textarea,
 select{
 	box-sizing: border-box;
@@ -180,46 +180,46 @@ select{
 	-o-transition: all 0.30s ease-in-out;
 	outline: none;
 }
-.nano-form input[type=text]:focus,
-.nano-form input[type=date]:focus,
-.nano-form input[type=datetime]:focus,
-.nano-form input[type=number]:focus,
-.nano-form input[type=search]:focus,
-.nano-form input[type=time]:focus,
-.nano-form input[type=url]:focus,
-.nano-form input[type=email]:focus,
-.nano-form textarea:focus,
-.nano-form select:focus{
+.coin-form input[type=text]:focus,
+.coin-form input[type=date]:focus,
+.coin-form input[type=datetime]:focus,
+.coin-form input[type=number]:focus,
+.coin-form input[type=search]:focus,
+.coin-form input[type=time]:focus,
+.coin-form input[type=url]:focus,
+.coin-form input[type=email]:focus,
+.coin-form textarea:focus,
+.coin-form select:focus{
 	-moz-box-shadow: 0 0 8px #88D5E9;
 	-webkit-box-shadow: 0 0 8px #88D5E9;
 	box-shadow: 0 0 8px #88D5E9;
 	border: 1px solid #88D5E9;
 }
-.nano-form .field-divided{
+.coin-form .field-divided{
 	width: 49%;
 }
 
-.nano-form .field-long{
+.coin-form .field-long{
 	width: 100%;
 }
-.nano-form .field-select{
+.coin-form .field-select{
 	width: 100%;
 }
-.nano-form .field-textarea{
+.coin-form .field-textarea{
 	height: 100px;
 }
-.nano-form input[type=submit], .nano-form input[type=button]{
+.coin-form input[type=submit], .coin-form input[type=button]{
 	background: #4B99AD;
 	padding: 8px 15px 8px 15px;
 	border: none;
 	color: #fff;
 }
-.nano-form input[type=submit]:hover, .nano-form input[type=button]:hover{
+.coin-form input[type=submit]:hover, .coin-form input[type=button]:hover{
 	background: #4691A4;
 	box-shadow:none;
 	-moz-box-shadow:none;
 	-webkit-box-shadow:none;
 }
-.nano-form .required{
+.coin-form .required{
 	color:red;
 }

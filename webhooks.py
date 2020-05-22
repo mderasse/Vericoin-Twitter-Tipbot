@@ -10,16 +10,15 @@ from datetime import timedelta, datetime
 from http import HTTPStatus
 from logging.handlers import TimedRotatingFileHandler
 
-import nano
 import requests
 import telegram
 import tweepy
 from flask import Flask, render_template, request, Response, redirect, jsonify
 from flask_weasyprint import HTML, render_pdf
 
-import modules.currency
 import modules.db
 import modules.orchestration
+import modules.rpc as rpc
 import modules.social
 import modules.translations as translations
 
@@ -45,10 +44,6 @@ config.read('webhookconfig.ini')
 
 # Check the currency of the bot
 CURRENCY = config.get('main', 'currency')
-CONVERT_MULTIPLIER = {
-    'nano': 1000000000000000000000000000000,
-    'banano': 100000000000000000000000000000
-}
 
 # Twitter API connection settings
 CONSUMER_KEY = config.get(CURRENCY, 'consumer_key')
@@ -66,14 +61,9 @@ BOT_ACCOUNT = config.get(CURRENCY, 'bot_account')
 BOT_NAME_TWITTER = config.get(CURRENCY, 'bot_name_twitter')
 BOT_NAME_TELEGRAM = config.get(CURRENCY, 'bot_name_telegram')
 
-# Set key for webhook challenge from Twitter
-key = config.get(CURRENCY, 'consumer_secret')
-
 # Set route variables
 TWITTER_URI = config.get('routes', 'twitter_uri')
-TWITTER_BANANO_URI = config.get('routes', 'twitter_banano_uri')
 TELEGRAM_URI = config.get('routes', 'telegram_uri')
-TELEGRAM_BANANO_URI = config.get('routes', 'telegram_banano_uri')
 TELEGRAM_SET_URI = config.get('routes', 'telegram_set_uri')
 BASE_URL = config.get('routes', 'base_url')
 EXPLORER = config.get('routes', '{}_explorer'.format(CURRENCY))
@@ -95,153 +85,13 @@ api = tweepy.API(auth)
 if TELEGRAM_KEY != 'none':
     telegram_bot = telegram.Bot(token=TELEGRAM_KEY)
 
-# Connect to Nano Node
-NODE_IP = config.get(CURRENCY, 'node_ip')
-rpc = nano.rpc.Client(NODE_IP)
-
-
-# Flask routing
-@app.route('/test/papertip')
-def papertiptest():
-
-    exp_length = 30
-
-    currency_amount = 5.00
-    currency_type = 'EUR'
-    crypto_currency = 'NANO'
-    nano_amount = modules.currency.get_fiat_conversion(currency_type, crypto_currency, currency_amount)
-
-    if currency_type == 'USD':
-        currency_mark = '$'
-    elif currency_type == 'EUR':
-        currency_mark = u"\u20AC"
-    else:
-        currency_mark = u"\u00A3"
-
-    gen_date = datetime.now().strftime("%b %d, %y")
-    exp_date = (datetime.now() + timedelta(days=exp_length)).strftime("%b %d, %y")
-    nano_price = modules.currency.get_fiat_price(currency_type, crypto_currency)
-    qr_img = "papertipqr.png"
-    qr_link = "https://nanotipbot.com/tips/iaoi4fat-haa-32aaa"
-    num_tip = 6
-
-    return render_template('/templates/papertip.html', nano_amount=nano_amount, currency_mark=currency_mark,
-                           currency_amount=currency_amount, gen_date=gen_date, exp_date=exp_date, nano_price=nano_price,
-                           qr_img=qr_img, qr_link=qr_link, num_tip=num_tip, currency=CURRENCY)
-
-
-@app.route('/test/papertippdf')
-def paperpdf():
-
-    exp_length = 30
-
-    currency_amount = 5.00
-    currency_type = 'USD'
-    crypto_currency = 'NANO'
-    nano_amount = modules.currency.get_fiat_conversion(currency_type, crypto_currency, currency_amount)
-
-    if currency_type == 'USD':
-        currency_mark = '$'
-    elif currency_type == 'EUR':
-        currency_mark = u"\u20AC"
-    else:
-        currency_mark = u"\u00A3"
-
-    gen_date = datetime.now().strftime("%b %d, %y")
-    exp_date = (datetime.now() + timedelta(days=exp_length)).strftime("%b %d, %y")
-    nano_price = modules.currency.get_fiat_price(currency_type, crypto_currency)
-    qr_img = "papertipqr.png"
-    qr_link = "https://nanotipbot.com/tips/iaoi4fat-haa-32aaa"
-    num_tip = 12
-
-    html = render_template('papertip.html', nano_amount=nano_amount, currency_mark=currency_mark,
-                           currency_amount=currency_amount, gen_date=gen_date, exp_date=exp_date, nano_price=nano_price,
-                           qr_img=qr_img, qr_link=qr_link, num_tip=num_tip, currency=CURRENCY)
-
-    return render_pdf(HTML(string=html))
-
-
-@app.route('/pay', methods=['GET'])
-def deep_link_test():
-    address = request.args.get('address')
-    amount = request.args.get('amount')
-
-    if amount is None:
-        uri = "nano://{}".format(address)
-        return render_template('uriformatter.html', uri=uri, address=address, currency=CURRENCY)
-
-    else:
-        logger.info(amount)
-        amount_raw = int(Decimal(amount) * CONVERT_MULTIPLIER[CURRENCY])
-        logger.info("amount_raw = {}".format(int(amount_raw)))
-        uri = "nano://{}?amount={}".format(address, amount_raw)
-        return render_template('uriformatter.html', uri=uri, address=address, amount=Decimal(amount),
-                               amount_raw=amount_raw, currency=CURRENCY)
-
-
-@app.route('/noappredirect')
-def noappredirect():
-    address = request.args.get('address')
-    amount_raw = request.args.get('amount')
-
-    logger.info("amount: {}".format(amount_raw))
-    logger.info("amount = none: {}".format((amount_raw is None)))
-
-    if amount_raw is None or amount_raw == 'None' or amount_raw == '':
-        return render_template('noappredirect.html', address=address, amount=0, amount_raw=0)
-
-    return render_template('noappredirect.html', address=address,
-                           amount=int(amount_raw) / CONVERT_MULTIPLIER[CURRENCY], amount_raw=amount_raw,
-                           currency=CURRENCY)
-
-
-@app.route('/paygenerator')
-def linkgenerator():
-    return render_template('linkgenerator.html', currency=CURRENCY)
-
 
 @app.route('/tutorial')
 @app.route('/tutorial.html')
 def tutorial():
-    if CURRENCY == 'banano':
-        tip_command = '!ban'
-    else:
-        tip_command = '!tip'
+    tip_command = '!tip'
 
     return render_template('tutorial.html', currency=CURRENCY, bot_id=BOT_ID_TWITTER, bot_name_twitter=BOT_NAME_TWITTER, tip_command=tip_command)
-
-
-@app.route('/about')
-@app.route('/about.html')
-def about():
-    btc_energy = 887000
-    nano_energy = 0.032
-    total_energy, checked_blocks = modules.currency.get_energy(nano_energy)
-
-    total_energy = round(total_energy, 3)
-
-    btc_vs_nano = round((total_energy / btc_energy), 3)
-
-    total_energy_formatted = '{:,}'.format(total_energy)
-    btc_energy_formatted = '{:,}'.format(btc_energy)
-    checked_blocks_formatted = '{:,}'.format(checked_blocks)
-
-    return render_template('about.html', btc_energy=btc_energy_formatted, nano_energy=nano_energy,
-                           btc_vs_nano=btc_vs_nano, total_energy=total_energy_formatted,
-                           checked_blocks=checked_blocks_formatted, currency=CURRENCY)
-
-
-@app.route('/contact')
-@app.route('/contact.html')
-def contact():
-    return render_template('contact.html', currency=CURRENCY)
-
-
-@app.route('/contact-form-thank-you')
-@app.route('/contact-form-thank-you.html')
-def thanks():
-    return render_template('contact-form-thank-you.html', currency=CURRENCY)
-
 
 @app.route('/tippers')
 @app.route('/tippers.html')
@@ -308,14 +158,11 @@ def index():
     r = requests.get('https://api.coingecko.com/api/v3/simple/price?ids={}&vs_currencies=usd'.format(CURRENCY))
     rx = r.json()
     price = float(rx[CURRENCY]['usd'])
-    if CURRENCY == 'banano':
-        tip_command = '!ban'
-    else:
-        tip_command = '!tip'
+    tip_command = '!tip'
     if price > .01:
         price = round(price, 2)
 
-    total_tipped_nano = ("SELECT tip_list.system, sum(amount) AS total "
+    total_tipped_coin = ("SELECT tip_list.system, sum(amount) AS total "
                          "FROM {0}.tip_list "
                          "WHERE receiver_id IN (SELECT user_id FROM {0}.users) "
                          "GROUP BY system "
@@ -327,14 +174,14 @@ def index():
                            "GROUP BY tip_list.system "
                            "ORDER BY notips DESC".format(DB_SCHEMA))
 
-    total_tipped_nano_table = modules.db.get_db_data(total_tipped_nano)
+    total_tipped_coin_table = modules.db.get_db_data(total_tipped_coin)
     total_tipped_number_table = modules.db.get_db_data(total_tipped_number)
     try:
-        total_value_usd = round(Decimal(total_tipped_nano_table[0][1] + total_tipped_nano_table[1][1]) * Decimal(price), 2)
+        total_value_usd = round(Decimal(total_tipped_coin_table[0][1] + total_tipped_coin_table[1][1]) * Decimal(price), 2)
     except Exception as e:
         total_value_usd = 0
 
-    return render_template('index.html', total_tipped_nano_table=total_tipped_nano_table,
+    return render_template('index.html', total_tipped_coin_table=total_tipped_coin_table,
                            total_tipped_number_table=total_tipped_number_table, total_value_usd=total_value_usd,
                            price=price, currency=CURRENCY, bot_id=BOT_ID_TWITTER, bot_account=BOT_ACCOUNT,
                            bot_name_twitter=BOT_NAME_TWITTER, bot_name_telegram=BOT_NAME_TELEGRAM,
@@ -455,7 +302,6 @@ def get_all_users_twitter():
         return e
 
 
-@app.route(TWITTER_BANANO_URI, methods=["GET"])
 @app.route(TWITTER_URI, methods=["GET"])
 def webhook_challenge():
     # creates HMAC SHA-256 hash from incoming token and your consumer secret
@@ -463,7 +309,7 @@ def webhook_challenge():
     crc = request.args.get('crc_token')
 
     validation = hmac.new(
-        key=bytes(key, 'utf-8'),
+        key=bytes(CONSUMER_SECRET, 'utf-8'),
         msg=bytes(crc, 'utf-8'),
         digestmod=hashlib.sha256
     )
@@ -487,13 +333,12 @@ def get_twitter_account(screen_name):
             account_call = ("SELECT account FROM users "
                             "WHERE user_id = '{}' AND users.system = 'twitter';".format(user.id_str))
             account_return = modules.db.get_db_data(account_call)
-            modules.currency.receive_pending(account_return[0][0])
-            balance_return = rpc.account_balance(account="{}".format(account_return[0][0]))
+            balance_return = rpc.get_account_balance(account_return[0][0])
             account_dict = {
                 'user_id': user.id_str,
                 'account': account_return[0],
-                'balance': str(balance_return['balance'] / CONVERT_MULTIPLIER[CURRENCY]),
-                'pending': str(balance_return['pending'] / CONVERT_MULTIPLIER[CURRENCY])
+                'balance': str(balance_return['balance']),
+                'pending': str(balance_return['pending'])
             }
             response = Response(json.dumps(account_dict))
             response.headers['Access-Control-Allow-Credentials'] = True
@@ -531,7 +376,7 @@ def get_twitter_account(screen_name):
 @app.route('/webhooks/twitter/refreshbalance/<account>', methods=["GET"])
 def refresh_balance(account):
     try:
-        balance_return = rpc.account_balance(account="{}".format(account))
+        balance_return = rpc.get_account_balance(account)
         balance_dict = {
             'balance': balance_return[0],
             'pending': balance_return[1]
@@ -547,7 +392,6 @@ def refresh_balance(account):
         return e, HTTPStatus.BAD_REQUEST
 
 
-@app.route(TELEGRAM_BANANO_URI, methods=["POST"])
 @app.route(TELEGRAM_URI, methods=["POST"])
 def telegram_event():
     message = {
@@ -555,10 +399,10 @@ def telegram_event():
         # text:                   A list containing the text of the received tweet, split by ' '
         # sender_id:              Twitter ID of the user sending the tip
         # sender_screen_name:     Twitter Handle of the user sending the tip
-        # sender_account:         Nano account of sender - Error logged through None value
+        # sender_account:         coin account of sender - Error logged through None value
         # sender_register:        Registration status with Tip Bot of sender account
-        # sender_balance_raw:     Amount of Nano in sender's account, stored in raw
-        # sender_balance:         Amount of Nano in sender's account, stored in Nano
+        # sender_balance_raw:     Amount of coin in sender's account, stored in raw
+        # sender_balance:         Amount of coin in sender's account, stored in coin
 
         # action_index:           Location of key action value *(currently !tip only)
         # action:                 Action found in the received tweet - Error logged through None value
@@ -579,7 +423,7 @@ def telegram_event():
         # the below parameters
         #    receiver_id:            Twitter ID of the user receiving a tip
         #    receiver_screen_name:   Twitter Handle of the user receiving a tip
-        #    receiver_account:       Nano account of receiver
+        #    receiver_account:       coin account of receiver
         #    receiver_register:      Registration status with Tip Bot of reciever account
     ]
     message['system'] = 'telegram'
@@ -735,7 +579,6 @@ def telegram_event():
     return 'ok'
 
 
-@app.route(TWITTER_BANANO_URI, methods=["POST"])
 @app.route(TWITTER_URI, methods=["POST"])
 def twitter_event_received():
     message = {}
@@ -746,7 +589,7 @@ def twitter_event_received():
     auth_header = request.headers.get('X-Twitter-Webhooks-Signature')
     request_data = request.get_data()
     validation = hmac.new(
-        key=bytes(key, 'utf-8'),
+        key=bytes(CONSUMER_SECRET, 'utf-8'),
         msg=request_data,
         digestmod=hashlib.sha256
     )
@@ -784,7 +627,7 @@ def twitter_event_received():
         message_object = request_json['direct_message_events'][0].get('message_create', {})
 
         message['sender_id'] = message_object.get('sender_id')
-        bot_ids = ['1115793994024464384', '894722023', '966739513195335680', '624103005']
+        bot_ids = ['1263594761073483777']
         if message['sender_id'] in bot_ids:
             return
 
@@ -830,7 +673,7 @@ def twitter_event_received():
 
         message = modules.social.check_message_action(message)
         if message['action'] is None:
-            logger.info("{}: Mention of nano tip bot without a !tip command.".format(datetime.now()))
+            logger.info("{}: Mention of veritip bot without a !tip command.".format(datetime.now()))
             return '', HTTPStatus.OK
 
         message = modules.social.validate_tip_amount(message)
@@ -859,7 +702,7 @@ def twitter_event_received():
                 return '', HTTPStatus.OK
 
         elif str(message['sender_id']) == str(BOT_ID_TWITTER):
-            logger.info("{}: TipBot sent a message.".format(datetime.now()))
+            logger.info("{}: VeriTipBot sent a message.".format(datetime.now()))
 
         return '', HTTPStatus.OK
 
@@ -892,4 +735,4 @@ if __name__ == "__main__":
     modules.db.db_init()
     logger.info("db initialized from wsgi")
     modules.social.telegram_set_webhook()
-    app.run(host='0.0.0.0')
+    app.run(host='127.0.0.1', port=3003)

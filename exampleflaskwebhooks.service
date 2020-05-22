@@ -1,5 +1,5 @@
 [Unit]
-Description=Gunicorn instance to serve Nano / Banano Tip Bot
+Description=Gunicorn instance to serve Coin Tip Bot
 After=network.target
 
 [Service]

@@ -1897,7 +1897,7 @@ donate_commands = {
     'fa': []
 }
 
-nano_tip_commands = {
+coin_tip_commands = {
     'en': ['!tip', '!t', '/tip', '/t'],
     'es': [
         # Users said they would prefer english commands
@@ -1925,11 +1925,6 @@ nano_tip_commands = {
     'pt-br': [],
     'bg': [],
     'fa': []
-}
-
-banano_tip_commands = {
-    # Specialized banano tip commands to prevent issues with banano and nano being tagged in the same tweet
-    'en': ['!ban', '/ban', '!b', '/b']
 }
 
 private_tip_commands = {

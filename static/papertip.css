@@ -95,13 +95,13 @@ body {
       top: -9.6mm;
     }
 
-    .tip-body .nano-logo {
+    .tip-body .coin-logo {
       width: 5.5mm;
       padding-left: 2mm;
       display: inline-block;
     }
 
-    .tip-body .nano-amount {
+    .tip-body .coin-amount {
       display: inline-block;
       font-size: .8em;
     }
@@ -121,7 +121,7 @@ body {
       position: relative;
       top: -12mm;
     }
-    .tip-body .nano-price {
+    .tip-body .coin-price {
       display: inline-block;
       font-size: .5em;
       padding-left: 2mm;

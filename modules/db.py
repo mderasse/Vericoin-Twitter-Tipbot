@@ -5,8 +5,6 @@ from datetime import datetime
 from decimal import *
 from logging.handlers import TimedRotatingFileHandler
 
-import modules.currency
-
 import MySQLdb
 
 # Set logging info
@@ -351,22 +349,3 @@ def set_spare_accounts(accounts):
         logger.info("Error inserting spare accounts: {}".format(e))
 
     logger.info("New accounts set in DB.")
-
-
-def get_spare_account():
-    """
-    Retrieve an account from the database.
-    """
-    check_accounts_call = "SELECT count(account) FROM {}.spare_accounts;".format(DB_SCHEMA)
-    check_accounts_return = get_db_data(check_accounts_call)
-    if int(check_accounts_return[0][0]) <= 5:
-        accounts = modules.currency.generate_accounts()
-        set_spare_accounts(accounts)
-
-    get_account_call = "SELECT account FROM {}.spare_accounts LIMIT 1;".format(DB_SCHEMA)
-    spare_account_return = get_db_data(get_account_call)
-
-    remove_account_call = "DELETE FROM {}.spare_accounts WHERE account = %s".format(DB_SCHEMA)
-    set_db_data(remove_account_call, spare_account_return[0])
-
-    return spare_account_return[0][0]

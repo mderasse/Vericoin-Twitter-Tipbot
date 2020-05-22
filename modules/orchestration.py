@@ -8,12 +8,11 @@ from decimal import Decimal
 from http import HTTPStatus
 from logging.handlers import TimedRotatingFileHandler
 
-import nano
-
 import modules.currency
 import modules.db
 import modules.social
 import modules.translations as translations
+import modules.rpc as rpc
 
 # Set logging info
 logger = logging.getLogger("orchestration_log")
@@ -33,22 +32,12 @@ CURRENCY = config.get('main', 'currency')
 
 # Set constants
 BULLET = u"\u2022"
-NODE_IP = config.get(CURRENCY, 'node_ip')
-WALLET = config.get(CURRENCY, 'wallet')
 BOT_ID_TWITTER = config.get(CURRENCY, 'bot_id_twitter')
 BOT_NAME_TWITTER = config.get(CURRENCY, 'bot_name_twitter')
 BOT_NAME_TELEGRAM = config.get(CURRENCY, 'bot_name_telegram')
 BOT_ACCOUNT = config.get(CURRENCY, 'bot_account')
 MIN_TIP = config.get(CURRENCY, 'min_tip')
 EXPLORER = config.get('routes', '{}_explorer'.format(CURRENCY))
-CONVERT_MULTIPLIER = {
-    'nano': 1000000000000000000000000000000,
-    'banano': 100000000000000000000000000000
-}
-
-# Connect to global functions
-rpc = nano.rpc.Client(NODE_IP)
-
 
 def parse_action(message):
     # If the bot is in maintenance status, send a message and return.
@@ -58,17 +47,14 @@ def parse_action(message):
                                translations.maintenance_text[message['language']].format(BOT_NAME_TWITTER),
                                message['system'])
         return ''
-    # Set tip commands
-    if CURRENCY == 'banano':
-        tip_commands = modules.translations.banano_tip_commands['en']
-    else:
-        tip_commands = modules.translations.nano_tip_commands[message['language']]
-        logger.info("language: {}".format(message['language']))
-        if message['language'] != 'en':
-            english_commands = modules.translations.nano_tip_commands['en']
-            for command in english_commands:
-                logger.info("commad: {}".format(command))
-                tip_commands.append(command)
+
+    tip_commands = modules.translations.coin_tip_commands[message['language']]
+    logger.info("language: {}".format(message['language']))
+    if message['language'] != 'en':
+        english_commands = modules.translations.coin_tip_commands['en']
+        for command in english_commands:
+            logger.info("commad: {}".format(command))
+            tip_commands.append(command)
 
     logger.info('tip commands: {}'.format(tip_commands))
 
@@ -196,13 +182,10 @@ def parse_action(message):
         new_pid = os.fork()
         if new_pid == 0:
             try:
-                if CURRENCY == 'banano':
-                    tip_command = modules.translations.banano_tip_commands['en'][0]
+                if len(modules.translations.coin_tip_commands[message['language']]) > 0:
+                    tip_command = modules.translations.coin_tip_commands[message['language']][0]
                 else:
-                    if len(modules.translations.nano_tip_commands[message['language']]) > 0:
-                        tip_command = modules.translations.nano_tip_commands[message['language']][0]
-                    else:
-                        tip_command = modules.translations.nano_tip_commands['en'][0]
+                    tip_command = modules.translations.coin_tip_commands['en'][0]
 
                 modules.social.send_dm(message['sender_id'],
                                        translations.private_tip_text[message['language']].format(tip_command),
@@ -295,13 +278,10 @@ def help_process(message):
     """
     Reply to the sender with help commands
     """
-    if CURRENCY == 'banano':
-        tip_command = modules.translations.banano_tip_commands['en'][0]
+    if len(modules.translations.coin_tip_commands[message['language']]) > 0:
+        tip_command = modules.translations.coin_tip_commands[message['language']][0]
     else:
-        if len(modules.translations.nano_tip_commands[message['language']]) > 0:
-            tip_command = modules.translations.nano_tip_commands[message['language']][0]
-        else:
-            tip_command = modules.translations.nano_tip_commands['en'][0]
+        tip_command = modules.translations.coin_tip_commands['en'][0]
 
     modules.social.send_dm(message['sender_id'],
                            translations.help_message[message['language']].format(CURRENCY.title(),
@@ -402,14 +382,11 @@ def balance_process(message):
             modules.db.set_db_data(set_register_call, set_register_values)
         new_pid = os.fork()
         if new_pid == 0:
-            modules.currency.receive_pending(message['sender_account'])
             os._exit(0)
         else:
-            balance_return = rpc.account_balance(account="{}".format(message['sender_account']))
-            message['sender_balance_raw'] = balance_return['balance']
-            message['sender_pending_raw'] = balance_return['pending']
-            message['sender_balance'] = balance_return['balance'] / CONVERT_MULTIPLIER[CURRENCY]
-            message['sender_pending'] = balance_return['pending'] / CONVERT_MULTIPLIER[CURRENCY]
+            balance_return = rpc.get_account_balance(message['sender_account'])
+            message['sender_balance'] = balance_return['balance']
+            message['sender_pending'] = balance_return['pending']
 
             modules.social.send_dm(message['sender_id'], translations.balance_text[message['language']]
                                    .format(message['sender_balance'],
@@ -536,18 +513,17 @@ def withdraw_process(message):
                 set_register_values = [message['sender_id'], message['system']]
                 modules.db.set_db_data(set_register_call, set_register_values)
 
-            modules.currency.receive_pending(sender_account)
-            balance_return = rpc.account_balance(account='{}'.format(sender_account))
+            balance_return = rpc.get_account_balance(sender_account)
 
             if len(message['dm_array']) == 2:
                 receiver_account = message['dm_array'][1].lower()
             else:
                 receiver_account = message['dm_array'][2].lower()
 
-            if rpc.validate_account_number(receiver_account) == 0:
+            if rpc.validate_address(receiver_account) is True:
                 modules.social.send_dm(message['sender_id'], translations.invalid_account_text[message['language']],
                                        message['system'])
-                logger.info("{}: The xrb account number is invalid: {}".format(datetime.now(), receiver_account))
+                logger.info("{}: The address is invalid: {}".format(datetime.now(), receiver_account))
 
             elif balance_return['balance'] == 0:
                 modules.social.send_dm(message['sender_id'], translations.no_balance_text[message['language']]
@@ -564,7 +540,7 @@ def withdraw_process(message):
                                                translations.invalid_amount_text[message['language']],
                                                message['system'])
                         return
-                    withdraw_amount_raw = int(withdraw_amount * CONVERT_MULTIPLIER[CURRENCY])
+                    withdraw_amount_raw = int(withdraw_amount)
                     if Decimal(withdraw_amount_raw) > Decimal(balance_return['balance']):
                         modules.social.send_dm(message['sender_id'],
                                                translations.not_enough_balance_text[message['language']].format(
@@ -573,18 +549,10 @@ def withdraw_process(message):
                         return
                 else:
                     withdraw_amount_raw = balance_return['balance']
-                    withdraw_amount = balance_return['balance'] / CONVERT_MULTIPLIER[CURRENCY]
-                # send the total balance to the provided account
-                work = modules.currency.get_pow(sender_account)
-                if work == '':
-                    logger.info("{}: processed without work".format(datetime.now()))
-                    send_hash = rpc.send(wallet="{}".format(WALLET), source="{}".format(sender_account),
-                                         destination="{}".format(receiver_account), amount=withdraw_amount_raw)
-                else:
-                    logger.info("{}: processed with work: {} using wallet: {}".format(datetime.now(), work, WALLET))
-                    send_hash = rpc.send(wallet="{}".format(WALLET), source="{}".format(sender_account),
-                                         destination="{}".format(receiver_account), amount=withdraw_amount_raw,
-                                         work=work)
+                    withdraw_amount = balance_return['balance']
+                
+                # XXX - Send balance to account
+
                 logger.info("{}: send_hash = {}".format(datetime.now(), send_hash))
                 # respond that the withdraw has been processed
                 modules.social.send_dm(message['sender_id'], translations.withdraw_text[message['language']]
@@ -613,14 +581,12 @@ def donate_process(message):
         sender_account = donate_data[0][0]
         send_amount = message['dm_array'][1]
 
-        modules.currency.receive_pending(sender_account)
-
-        balance_return = rpc.account_balance(account='{}'.format(sender_account))
-        balance = balance_return['balance'] / CONVERT_MULTIPLIER[CURRENCY]
+        balance_return = rpc.get_account_balance(sender_account)
+        balance = balance_return['balance']
         receiver_account = BOT_ACCOUNT
 
         try:
-            logger.info("{}: The user is donating {} NANO".format(datetime.now(), Decimal(send_amount)))
+            logger.info("{}: The user is donating {} Coin".format(datetime.now(), Decimal(send_amount)))
         except Exception as e:
             logger.info("{}: ERROR IN CONVERTING DONATION AMOUNT: {}".format(datetime.now(), e))
             modules.social.send_dm(message['sender_id'], translations.wrong_donate_text[message['language']],
@@ -641,34 +607,23 @@ def donate_process(message):
         elif Decimal(send_amount) < Decimal(MIN_TIP):
             modules.social.send_dm(message['sender_id'], translations.small_donate_text[message['language']]
                                    .format(MIN_TIP), message['system'])
-            logger.info("{}: User tried to donate less than 0.000001".format(datetime.now()))
+            logger.info("{}: User tried to donate less than the min tip".format(datetime.now()))
             return ''
         else:
             # If the send amount > balance, send the whole balance.  If not, send the send amount.
             # This is to take into account for Decimal value conversions.
             if Decimal(send_amount) > Decimal(balance):
-                send_amount_raw = Decimal(balance) * CONVERT_MULTIPLIER[CURRENCY]
+                send_amount_raw = Decimal(balance)
             else:
-                send_amount_raw = Decimal(send_amount) * CONVERT_MULTIPLIER[CURRENCY]
+                send_amount_raw = Decimal(send_amount)
             logger.info(('{}; send_amount_raw: {}'.format(datetime.now(), int(send_amount_raw))))
-            work = modules.currency.get_pow(sender_account)
-            if work == '':
-                logger.info("{}: Processing donation without work.".format(datetime.now()))
-                send_hash = rpc.send(wallet="{}".format(WALLET), source="{}".format(sender_account),
-                                     destination="{}".format(receiver_account),
-                                     amount="{}".format(int(send_amount_raw)))
-            else:
-                logger.info("{}: Processing donation with work: {}".format(datetime.now(), work))
-                send_hash = rpc.send(wallet="{}".format(WALLET), source="{}".format(sender_account),
-                                     destination="{}".format(receiver_account),
-                                     amount="{}".format(int(send_amount_raw)),
-                                     work=work)
+            # XXX - Need to send donation
 
             logger.info("{}: send_hash = {}".format(datetime.now(), send_hash))
 
             modules.social.send_dm(message['sender_id'], translations.donate_text[message['language']]
                                    .format(send_amount, CURRENCY, EXPLORER, send_hash), message['system'])
-            logger.info("{}: {} NANO donation processed.  Hash: {}".format(datetime.now(), Decimal(send_amount),
+            logger.info("{}: {} coin donation processed.  Hash: {}".format(datetime.now(), Decimal(send_amount),
                                                                             send_hash))
 
     else:
@@ -684,15 +639,12 @@ def tip_process(message, users_to_tip, request_json):
     logger.info("{}: in tip_process".format(datetime.now()))
 
     # Set tip commands
-    if CURRENCY == 'banano':
-        tip_commands = modules.translations.banano_tip_commands['en']
-    else:
-        tip_commands = modules.translations.nano_tip_commands[message['language']]
-        if message['language'] != 'en':
-            english_commands = modules.translations.nano_tip_commands['en']
-            for command in english_commands:
-                logger.info("commad: {}".format(command))
-                tip_commands.append(command)
+    tip_commands = modules.translations.coin_tip_commands[message['language']]
+    if message['language'] != 'en':
+        english_commands = modules.translations.coin_tip_commands['en']
+        for command in english_commands:
+            logger.info("commad: {}".format(command))
+            tip_commands.append(command)
 
     message, users_to_tip = modules.social.set_tip_list(message, users_to_tip, request_json)
     if len(users_to_tip) < 1 and message['system'] != 'telegram':
@@ -708,8 +660,9 @@ def tip_process(message, users_to_tip, request_json):
     if message['tip_amount'] <= 0:
         return
 
-    for t_index in range(0, len(users_to_tip)):
-        modules.currency.send_tip(message, users_to_tip, t_index)
+#    for t_index in range(0, len(users_to_tip)):
+        # XXX - Send tip like modules.currency.send_tip(message, users_to_tip, t_index)
+        
 
     # Inform the user that all tips were sent.
     if len(users_to_tip) >= 2:
@@ -762,12 +715,9 @@ def set_return_address_process(message):
                                translations.set_return_invalid_account[message['language']],
                                message['system'])
         return
-    check_address_data = {'action': 'validate_account_number', 'account': message['dm_array'][1]}
-    json_request = json.dumps(check_address_data)
-    r = requests.post('{}'.format(NODE_IP), data=json_request)
-    rx = r.json()
-    logger.info("request return: {}".format(rx))
-    if rx['valid'] == '0':
+
+    
+    if rpc.validate_address(message['dm_array'][1]) is False:
         modules.social.send_dm(message['sender_id'],
                                translations.set_return_invalid_account[message['language']],
                                message['system'])

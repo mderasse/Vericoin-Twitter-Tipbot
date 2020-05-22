@@ -1,15 +1,12 @@
 configparser
 requests
-redis
 rq
 python-telegram-bot
-pyqrcode
 tweepy
 flask
 datetime
 flask_weasyprint
 mysqlclient
-nano-python
+python-bitcoinrpc
 TwitterAPI
 cairocffi
-pypng

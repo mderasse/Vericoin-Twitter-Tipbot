@@ -5,16 +5,15 @@ import os
 from datetime import datetime
 from decimal import Decimal
 
-import nano
-import pyqrcode
 import telegram
 import tweepy
 from TwitterAPI import TwitterAPI
 from logging.handlers import TimedRotatingFileHandler
 
+
+import modules.rpc as rpc
 import modules.currency
 import modules.db
-import modules.orchestration
 import modules.translations as translations
 
 # Set Log File
@@ -32,10 +31,6 @@ config.read('{}/webhookconfig.ini'.format(os.getcwd()))
 
 # Check the currency of the bot
 CURRENCY = config.get('main', 'currency')
-CONVERT_MULTIPLIER = {
-    'nano': 1000000000000000000000000000000,
-    'banano': 100000000000000000000000000000
-}
 
 # Twitter API connection settings
 CONSUMER_KEY = config.get(CURRENCY, 'consumer_key')
@@ -51,8 +46,6 @@ TELEGRAM_KEY = config.get(CURRENCY, 'telegram_key')
 
 # Constants
 MIN_TIP = config.get(CURRENCY, 'min_tip')
-NODE_IP = config.get(CURRENCY, 'node_ip')
-WALLET = config.get(CURRENCY, 'wallet')
 
 # IDs
 BOT_ID_TWITTER = config.get(CURRENCY, 'bot_id_twitter')
@@ -72,8 +65,6 @@ if TELEGRAM_KEY != 'none':
     print(TELEGRAM_KEY)
     telegram_bot = telegram.Bot(token=TELEGRAM_KEY)
 
-# Connect to Nano node
-rpc = nano.rpc.Client(NODE_IP)
 
 
 def get_language(message):
@@ -172,54 +163,6 @@ def send_dm(receiver, message, system):
             logger.info("{}: Send DM - Telegram ERROR: {}".format(datetime.now(), e))
             pass
 
-
-def send_img(receiver, path, message, system):
-
-    if check_mute(receiver, system):
-        logger.info("{}: User has muted bot.".format(datetime.now()))
-        return
-
-    if system == 'twitter':
-        file = open(path, 'rb')
-        qr_data = file.read()
-        r = twitterAPI.request('media/upload', None, {'media': qr_data})
-
-        if r.status_code == 200:
-            media_id = r.json()['media_id']
-            logger.info('media_id: {}'.format(media_id))
-            msg_data = {
-                'event': {
-                    'type': 'message_create',
-                    'message_create': {
-                        'target': {
-                            'recipient_id': '{}'.format(receiver)
-                        },
-                        'message_data': {
-                            'text': '{}'.format(message),
-                            'attachment': {
-                                'type': 'media',
-                                'media': {
-                                    'id': '{}'.format(media_id)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            r = twitterAPI.request('direct_messages/events/new', json.dumps(msg_data))
-
-            if r.status_code != 200:
-                logger.info('Send image ERROR: {} : {}'.format(r.status_code, r.text))
-    elif system == 'telegram':
-        try:
-            qr_data = '{}{}qr/{}-{}.png'.format(BASE_URL, CURRENCY, system, receiver)
-            logger.info("{}qr_data: {}".format(CURRENCY, qr_data))
-            telegram_bot.send_photo(chat_id=receiver, photo=qr_data, caption=message)
-        except Exception as e:
-            logger.info("ERROR SENDING QR PHOTO TELEGRAM: {}".format(e))
-
-
 def set_message_info(status, message):
     """
     Set the tweet information into the message dictionary
@@ -267,14 +210,11 @@ def check_message_action(message):
     try:
         message['action_index'] = None
 
-        if CURRENCY == 'banano':
-            tip_commands = modules.translations.banano_tip_commands['en']
-        else:
-            tip_commands = modules.translations.nano_tip_commands[message['language']]
-            if message['language'] != 'en':
-                english_commands = modules.translations.nano_tip_commands['en']
-                for command in english_commands:
-                    tip_commands.append(command)
+        tip_commands = modules.translations.coin_tip_commands[message['language']]
+        if message['language'] != 'en':
+            english_commands = modules.translations.coin_tip_commands['en']
+            for command in english_commands:
+                tip_commands.append(command)
 
         logger.info("tip commands: {}".format(tip_commands))
 
@@ -300,15 +240,12 @@ def validate_tip_amount(message):
     Validate the tweet includes an amount to tip, and if that tip amount is greater than the minimum tip amount.
     """
     # Set tip commands
-    if CURRENCY == 'banano':
-        tip_commands = modules.translations.banano_tip_commands['en']
-    else:
-        tip_commands = modules.translations.nano_tip_commands[message['language']]
-        if message['language'] != 'en':
-            english_commands = modules.translations.nano_tip_commands['en']
-            for command in english_commands:
-                logger.info("commad: {}".format(command))
-                tip_commands.append(command)
+    tip_commands = modules.translations.coin_tip_commands[message['language']]
+    if message['language'] != 'en':
+        english_commands = modules.translations.coin_tip_commands['en']
+        for command in english_commands:
+            logger.info("commad: {}".format(command))
+            tip_commands.append(command)
 
     logger.info("{}: in validate_tip_amount".format(datetime.now()))
     try:
@@ -348,7 +285,7 @@ def validate_tip_amount(message):
         return message
 
     try:
-        message['tip_amount_raw'] = Decimal(message['tip_amount']) * CONVERT_MULTIPLIER[CURRENCY]
+        message['tip_amount_raw'] = Decimal(message['tip_amount'])
     except Exception as e:
         logger.info("{}: Exception converting tip_amount to tip_amount_raw".format(datetime.now()))
         logger.info("{}: {}".format(datetime.now(), e))
@@ -361,8 +298,6 @@ def validate_tip_amount(message):
     else:
         message['tip_amount_text'] = str(message['tip_amount'])
     
-    # remove any trailing 0's if decimal is 0.  This is to prevent confusion from someone tipping
-    # 1.000 and making users think they received 1000 nano/banano
     try:
         if '.' in message['tip_amount_text']:
             if int(message['tip_amount_text'][message['tip_amount_text'].index('.') + 1:]) == 0:
@@ -531,7 +466,7 @@ def set_tip_list(message, users_to_tip, request_json):
 
 def validate_sender(message):
     """
-    Validate that the sender has an account with the tip bot, and has enough NANO to cover the tip.
+    Validate that the sender has an account with the tip bot, and has enough Coin to cover the tip.
     """
     logger.info("{}: validating sender".format(datetime.now()))
     logger.info("sender id: {}".format(message['sender_id']))
@@ -555,19 +490,18 @@ def validate_sender(message):
         db_values = [message['sender_id'], message['system']]
         modules.db.set_db_data(db_call, db_values)
 
-    modules.currency.receive_pending(message['sender_account'])
-    message['sender_balance_raw'] = rpc.account_balance(account='{}'.format(message['sender_account']))
-    message['sender_balance'] = message['sender_balance_raw']['balance'] / CONVERT_MULTIPLIER[CURRENCY]
+    message['sender_balance_raw'] = rpc.get_account_balance(message['sender_account'])
+    message['sender_balance'] = message['sender_balance_raw']['balance']
 
     return message
 
 
 def validate_total_tip_amount(message):
     """
-    Validate that the sender has enough Nano to cover the tip to all users
+    Validate that the sender has enough Coin to cover the tip to all users
     """
     logger.info("{}: validating total tip amount".format(datetime.now()))
-    if message['sender_balance_raw']['balance'] < (message['total_tip_amount'] * CONVERT_MULTIPLIER[CURRENCY]):
+    if message['sender_balance_raw']['balance'] < (message['total_tip_amount']):
         send_reply(message, translations.not_enough_text[message['language']].format(CURRENCY.upper(),
                                                                                      message['total_tip_amount'],
                                                                                      CURRENCY.upper()))
@@ -622,19 +556,6 @@ def check_telegram_member(chat_id, chat_name, member_id, member_name):
 
     return
 
-
-def get_qr_code(sender_id, sender_account, sm_system):
-    """
-    Check to see if a QR code has been generated for the sender_id / system combination.  If not, generate one.
-    """
-    qr_exists = os.path.isfile('{}/{}qr/{}-{}.png'.format(os.getcwd(), CURRENCY, sm_system, sender_id))
-
-    if not qr_exists:
-        print("No {} QR exists, generating a QR for account {}".format(CURRENCY, sender_account))
-        account_qr = pyqrcode.create('{}'.format(sender_account))
-        account_qr.png('{}/{}qr/{}-{}.png'.format(os.getcwd(), CURRENCY, sm_system, sender_id), scale=10)
-
-
 def send_account_message(account_text, message, account):
     """
     Send a message to the user with their account information.  If twitter, include a QR code for scanning.
@@ -644,13 +565,8 @@ def send_account_message(account_text, message, account):
         logger.info("{}: User has muted bot.".format(datetime.now()))
         return
 
-    if message['system'] == 'twitter' or message['system'] == 'telegram':
-        get_qr_code(message['sender_id'], account, message['system'])
-        path = ('{}/{}qr/{}-{}.png'.format(os.getcwd(), CURRENCY, message['system'], message['sender_id']))
-        send_img(message['sender_id'], path, account_text, message['system'])
-    else:
-        send_dm(message['sender_id'], account_text, message['system'])
 
+    send_dm(message['sender_id'], account_text, message['system'])
     send_dm(message['sender_id'], account, message['system'])
 
 
@@ -662,4 +578,4 @@ def telegram_set_webhook():
         else:
             return "Error {}".format(response)
     except Exception as e:
-        print("banano has no telegram bot")
+        print("bot has no telegram bot")
