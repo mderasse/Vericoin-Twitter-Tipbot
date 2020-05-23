@@ -26,7 +26,7 @@ def get_account_balance(account_name):
     Get the current balance of an account
     """
     unconfirmed_balance = rpc.getbalance(account_name, 1)
-    confirmed_balance = rpc.getbalance(account_name, MIN_TX_CONFIRMATION)
+    confirmed_balance = rpc.getbalance(account_name, int(MIN_TX_CONFIRMATION))
     return {
         "balance": confirmed_balance,
         "pending": unconfirmed_balance - confirmed_balance,
