@@ -455,12 +455,12 @@ def telegram_event():
             logger.info("{}: action identified: {}".format(datetime.now(), message['dm_action']))
 
             # Update DB with new DM
-            # dm_insert_call = ("INSERT INTO dm_list (dm_id, processed, sender_id, dm_text, from_app) "
-            #                   "VALUES (%s, 0, %s, %s, 'telegram')")
-            # dm_insert_values = [message['dm_id'], message['sender_id'], message['text']]
-            # err = modules.db.set_db_data(dm_insert_call, dm_insert_values)
-            # if err is not None:
-            #     return 'ok'
+            dm_insert_call = ("INSERT INTO dm_list (dm_id, processed, sender_id, dm_text, from_app) "
+                               "VALUES (%s, 0, %s, %s, 'telegram')")
+            dm_insert_values = [message['dm_id'], message['sender_id'], message['text']]
+            err = modules.db.set_db_data(dm_insert_call, dm_insert_values)
+            if err is not None:
+                return 'ok'
 
             modules.orchestration.parse_action(message)
 

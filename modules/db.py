@@ -109,6 +109,7 @@ def create_triggers():
                       END;
                       """
 
+
     db_cursor.execute(user_trigger)
     db_cursor.execute(tip_list_trigger)
     db_cursor.execute(dm_list_trigger)
@@ -192,6 +193,7 @@ def create_tables():
              `sender_id` bigint(255) NOT NULL,
              `receiver_id` bigint(255) DEFAULT NULL,
              `dm_text` text DEFAULT NULL,
+             `from_app` varchar(45) DEFAULT NULL,
              `amount` decimal(10,5) DEFAULT NULL,
              `dm_response` text DEFAULT NULL,
              `first_attempt` tinyint(1) DEFAULT '0',
@@ -201,8 +203,8 @@ def create_tables():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
             """
             db_cursor.execute(sql)
-            logger.info("Checking if tip_list table was created: {}".format(
-                check_table_exists('tip_list')))
+            logger.info("Checking if dm_list table was created: {}".format(
+                check_table_exists('dm_list')))
 
         check_exists = check_table_exists('languages')
         if not check_exists:
