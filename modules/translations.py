@@ -930,39 +930,39 @@ account_text = {
 }
 # 17
 balance_text = {
-    'en': 'Available: {0} {1}\n'
-          'Pending: {2} {1}',
-    'es': 'Disponible: {0} {1}\n'
-          'Pendiente: {2} {1}',
-    'nl': 'Beschikbaar: {0} {1}\n'
-          'In afwachting: {2} {1}',
+    'en': 'Available: {0:.8f} {1}\n'
+          'Pending: {2:.8f} {1}',
+    'es': 'Disponible: {0:.8f} {1}\n'
+          'Pendiente: {2:.8f} {1}',
+    'nl': 'Beschikbaar: {0:.8f} {1}\n'
+          'In afwachting: {2:.8f} {1}',
     'ja': '',
-    'zh-t': '現有金額： {0} {1}\n'
-            '等候金額： {2} {1}',
-    'zh-s': '现有金额： {0} {1}\n'
-            '等候金额： {2} {1}',
-    'fr': 'Disponible: {0} {1}\n'
-          'En attente: {2} {1}',
-    'pt': 'Disponível: {0} {1}\n'
-          'Pendente: {2} {1}',
+    'zh-t': '現有金額： {0:.8f} {1}\n'
+            '等候金額： {2:.8f} {1}',
+    'zh-s': '现有金额： {0:.8f} {1}\n'
+            '等候金额： {2:.8f} {1}',
+    'fr': 'Disponible: {0:.8f} {1}\n'
+          'En attente: {2:.8f} {1}',
+    'pt': 'Disponível: {0:.8f} {1}\n'
+          'Pendente: {2:.8f} {1}',
     'th': '',
     'de': '',
-    'id': 'Tersedia: {0} {1}\n'
-          'Tertunda: {2} {1}',
+    'id': 'Tersedia: {0:.8f} {1}\n'
+          'Tertunda: {2:.8f} {1}',
     'vt': '',
-    'ru': 'Имеется в наличии: {0} {1}\n'
-          'В ожидании: {2} {1}',
+    'ru': 'Имеется в наличии: {0:.8f} {1}\n'
+          'В ожидании: {2:.8f} {1}',
     'sv': '',
-    'it': 'Disponibile: {0} {1}\n'
-          'In sospeso: {2} {1}',
-    'tr': 'Mevcut: {0} {1}\n'
-          'Bekleyen: {2} {1}',
-    'pt-br': 'Disponível: {0} {1}\n'
-             'Pendente: {2} {1}',
-    'bg': 'На разположение: {0} {1}\n'
-          'В изчакване: {2} [1}',
-    'fa': 'موجودی در دسترس: {0} {1}\n'
-          'موجودی در انتظار: {2} {1}'
+    'it': 'Disponibile: {0:.8f} {1}\n'
+          'In sospeso: {2:.8f} {1}',
+    'tr': 'Mevcut: {0:.8f} {1}\n'
+          'Bekleyen: {2:.8f} {1}',
+    'pt-br': 'Disponível: {0:.8f} {1}\n'
+             'Pendente: {2:.8f} {1}',
+    'bg': 'На разположение: {0:.8f} {1}\n'
+          'В изчакване: {2:.8f} [1}',
+    'fa': 'موجودی در دسترس: {0:.8f} {1}\n'
+          'موجودی در انتظار: {2:.8f} {1}'
 }
 # 18
 account_register_text = {

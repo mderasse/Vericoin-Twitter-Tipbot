@@ -389,9 +389,9 @@ def balance_process(message):
 
             modules.social.send_dm(message['sender_id'], translations.balance_text[message['language']]
                                    .format(message['sender_balance'],
-                                           CURRENCY.upper(),
+                                           CURRENCY_SYMBOL,
                                            message['sender_pending'],
-                                           CURRENCY.upper()),
+                                           CURRENCY_SYMBOL),
                                    message['from_app'])
             logger.info("{}: Balance Message Sent!".format(datetime.now()))
             return ''
@@ -486,7 +486,7 @@ def withdraw_process(message):
     # check if there is a 2nd argument
     if 3 >= len(message['dm_array']) >= 2:
         # if there is, retrieve the sender's account and wallet
-        withdraw_account_call = ("SELECT account, register FROM users WHERE user_id = {} AND users.from_app = '{}'"
+        withdraw_account_call = ("SELECT account, address, register FROM users WHERE user_id = {} AND users.from_app = '{}'"
                                  .format(message['sender_id'], message['from_app']))
         withdraw_data = modules.db.get_db_data(withdraw_account_call)
 
@@ -498,7 +498,8 @@ def withdraw_process(message):
 
         else:
             sender_account = withdraw_data[0][0]
-            sender_register = withdraw_data[0][1]
+            sender_address = withdraw_data[0][1]
+            sender_register = withdraw_data[0][2]
 
             if sender_register == 0:
                 set_register_call = (
@@ -520,7 +521,7 @@ def withdraw_process(message):
 
             elif balance_return['balance'] == 0:
                 modules.social.send_dm(message['sender_id'], translations.no_balance_text[message['language']]
-                                       .format(sender_account), message['from_app'])
+                                       .format(sender_address), message['from_app'])
                 logger.info("{}: The user tried to withdraw with 0 balance".format(datetime.now()))
 
             else:
