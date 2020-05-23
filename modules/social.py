@@ -71,8 +71,8 @@ def get_language(message):
     """
     Set the language for messaging the user
     """
-    get_language_call = "SELECT language_code FROM languages WHERE user_id = %s AND languages.system = %s"
-    language_values = [message['sender_id'], message['system']]
+    get_language_call = "SELECT language_code FROM languages WHERE user_id = %s AND languages.from_app = %s"
+    language_values = [message['sender_id'], message['from_app']]
     language_return = modules.db.get_db_data_new(get_language_call, language_values)
     # If there is no record, create a new one with default EN language
     try:
@@ -80,28 +80,28 @@ def get_language(message):
     except Exception as e:
         logger.info("{}: There was no language entry, setting default".format(datetime.now()))
         # Check if the user has an account - if not, create one
-        no_lang_call = ("SELECT account, register FROM users WHERE user_id = {} AND users.system = '{}'"
-                         .format(message['sender_id'], message['system']))
+        no_lang_call = ("SELECT account, register FROM users WHERE user_id = {} AND users.from_app = '{}'"
+                         .format(message['sender_id'], message['from_app']))
         data = modules.db.get_db_data(no_lang_call)
 
         if not data:
             # Create an account for the user
             sender_account = modules.db.get_spare_account()
-            account_create_call = ("INSERT INTO users (user_id, system, user_name, account, register) "
+            account_create_call = ("INSERT INTO users (user_id, from_app, user_name, account, register) "
                                    "VALUES(%s, %s, %s, %s, 1)")
-            account_create_values = [message['sender_id'], message['system'], message['sender_screen_name'],
+            account_create_values = [message['sender_id'], message['from_app'], message['sender_screen_name'],
                                      sender_account]
             modules.db.set_db_data(account_create_call, account_create_values)
         message['language'] = 'en'
 
 
-def get_receiver_language(user_id, system):
+def get_receiver_language(user_id, from_app):
     """
     Set the language for the receiver of the tip
     """
     get_language_call = ("SELECT language_code FROM languages WHERE user_id = %s "
-                         "AND languages.system = %s")
-    language_values = [user_id, system]
+                         "AND languages.from_app = %s")
+    language_values = [user_id, from_app]
     language_return = modules.db.get_db_data_new(get_language_call, language_values)
     try:
         return language_return[0][0]
@@ -110,13 +110,13 @@ def get_receiver_language(user_id, system):
         return 'en'
 
 
-def check_mute(user_id, system):
+def check_mute(user_id, from_app):
     """
     Check to see if the bot is muted by the message receiver
     """
     get_mute_call = ("SELECT mute FROM users WHERE user_id = %s "
-                     "AND system = %s")
-    mute_values = [user_id, system]
+                     "AND from_app = %s")
+    mute_values = [user_id, from_app]
     mute_return = modules.db.get_db_data_new(get_mute_call, mute_values)
 
     try:
@@ -126,7 +126,7 @@ def check_mute(user_id, system):
         return False
 
 
-def send_dm(receiver, message, system):
+def send_dm(receiver, message, from_app):
     """
     Send the provided message to the provided receiver
     """
@@ -134,11 +134,11 @@ def send_dm(receiver, message, system):
         logger.info("{}: Bot should not be messaging itself.".format(datetime.now()))
         return
 
-    if check_mute(receiver, system):
+    if check_mute(receiver, from_app):
         logger.info("{}: User has muted bot.".format(datetime.now()))
         return
 
-    if system == 'twitter':
+    if from_app == 'twitter':
         data = {
             'event': {
                 'type': 'message_create', 'message_create': {
@@ -156,7 +156,7 @@ def send_dm(receiver, message, system):
         if r.status_code != 200:
             logger.info('Send DM - Twitter ERROR: {} : {}'.format(r.status_code, r.text))
 
-    elif system == 'telegram':
+    elif from_app == 'telegram':
         try:
             telegram_bot.sendMessage(chat_id=receiver, text=message)
         except Exception as e:
@@ -201,7 +201,7 @@ def check_message_action(message):
     """
     Check to see if there are any key action values mentioned in the tweet.
     """
-    if message['system'] == 'telegram':
+    if message['from_app'] == 'telegram':
         try:
             check_for_ntb = message['text'].index("{}".format(BOT_NAME_TELEGRAM.lower()))
         except ValueError:
@@ -265,7 +265,7 @@ def validate_tip_amount(message):
         return message
     except Exception:
         logger.info("{}: Tip amount was not a number".format(datetime.now()))
-        if message['system'] == 'twitter':
+        if message['from_app'] == 'twitter':
             bot_name = BOT_NAME_TWITTER
         else:
             bot_name = BOT_NAME_TELEGRAM
@@ -331,7 +331,7 @@ def set_tip_list(message, users_to_tip, request_json):
 
     first_user_flag = False
 
-    if message['system'] == 'twitter':
+    if message['from_app'] == 'twitter':
         for t_index in range(message['starting_point'] + 1, len(message['text'])):
             if first_user_flag and len(message['text'][t_index]) > 0 and str(message['text'][t_index][0]) != "@":
                 logger.info("users identified, regular text breaking the loop: {}".format(message['text'][t_index][0]))
@@ -351,7 +351,7 @@ def set_tip_list(message, users_to_tip, request_json):
                     users_to_tip.clear()
                     return message, users_to_tip
 
-                receiver_language = get_receiver_language(user_info.id, message['system'])
+                receiver_language = get_receiver_language(user_info.id, message['from_app'])
 
                 user_dict = {'receiver_id': user_info.id, 'receiver_screen_name': user_info.screen_name,
                              'receiver_account': None, 'receiver_register': None,
@@ -359,7 +359,7 @@ def set_tip_list(message, users_to_tip, request_json):
                 users_to_tip.append(user_dict)
                 logger.info("{}: Users_to_tip: {}".format(datetime.now(), users_to_tip))
 
-    if message['system'] == 'telegram':
+    if message['from_app'] == 'telegram':
         logger.info("trying to set tiplist in telegram: {}".format(message))
 
         if 'reply_to_message' in request_json['message']:
@@ -374,7 +374,7 @@ def set_tip_list(message, users_to_tip, request_json):
                     receiver_id = user_check_data[0][0]
                     receiver_screen_name = user_check_data[0][1]
 
-                    receiver_language = get_receiver_language(receiver_id, message['system'])
+                    receiver_language = get_receiver_language(receiver_id, message['from_app'])
                     user_dict = {'receiver_id': receiver_id, 'receiver_screen_name': receiver_screen_name,
                                  'receiver_account': None, 'receiver_register': None,
                                  'receiver_language': receiver_language}
@@ -414,7 +414,7 @@ def set_tip_list(message, users_to_tip, request_json):
                                 if not first_user_flag:
                                     first_user_flag = True
                                 logger.info("User tipped via searching the string for mentions")
-                                receiver_language = get_receiver_language(receiver_id, message['system'])
+                                receiver_language = get_receiver_language(receiver_id, message['from_app'])
                                 user_dict = {'receiver_id': receiver_id, 'receiver_screen_name': receiver_screen_name,
                                              'receiver_account': None, 'receiver_register': None,
                                              'receiver_language': receiver_language}
@@ -440,7 +440,7 @@ def set_tip_list(message, users_to_tip, request_json):
                             receiver_screen_name = user_check_data[0][1]
                             logger.info("telegram user added via mention list.")
                             logger.info("mention: {}".format(mention))
-                            receiver_language = get_receiver_language(receiver_id, message['system'])
+                            receiver_language = get_receiver_language(receiver_id, message['from_app'])
 
                             user_dict = {'receiver_id': receiver_id, 'receiver_screen_name': receiver_screen_name,
                                          'receiver_account': None, 'receiver_register': None,
@@ -470,9 +470,9 @@ def validate_sender(message):
     """
     logger.info("{}: validating sender".format(datetime.now()))
     logger.info("sender id: {}".format(message['sender_id']))
-    logger.info("system: {}".format(message['system']))
-    db_call = "SELECT account, register FROM users where user_id = {} AND users.system = '{}'".format(message['sender_id'],
-                                                                                                      message['system'])
+    logger.info("from_app: {}".format(message['from_app']))
+    db_call = "SELECT account, register FROM users where user_id = {} AND users.from_app = '{}'".format(message['sender_id'],
+                                                                                                      message['from_app'])
     sender_account_info = modules.db.get_db_data(db_call)
 
     if not sender_account_info:
@@ -486,8 +486,8 @@ def validate_sender(message):
     message['sender_register'] = sender_account_info[0][1]
 
     if message['sender_register'] != 1:
-        db_call = "UPDATE users SET register = 1 WHERE user_id = %s AND users.system = %s"
-        db_values = [message['sender_id'], message['system']]
+        db_call = "UPDATE users SET register = 1 WHERE user_id = %s AND users.from_app = %s"
+        db_values = [message['sender_id'], message['from_app']]
         modules.db.set_db_data(db_call, db_values)
 
     message['sender_balance_raw'] = rpc.get_account_balance(message['sender_account'])
@@ -514,18 +514,18 @@ def validate_total_tip_amount(message):
 
 
 def send_reply(message, text):
-    if check_mute(message['sender_id'], message['system']):
+    if check_mute(message['sender_id'], message['from_app']):
         logger.info("{}: User has muted bot.".format(datetime.now()))
         return
     
-    if message['system'] == 'twitter':
+    if message['from_app'] == 'twitter':
         text = '@{} '.format(message['sender_screen_name']) + text
         try:
             api.update_status(text, message['id'])
         except tweepy.TweepError as e:
             logger.info("{}: Send Reply Tweepy Error: {}".format(datetime.now(), e))
 
-    elif message['system'] == 'telegram':
+    elif message['from_app'] == 'telegram':
         try:
             telegram_bot.sendMessage(chat_id=message['chat_id'], reply_to_message_id=message['id'], text=text)
         except Exception as e:
@@ -561,13 +561,13 @@ def send_account_message(account_text, message, account):
     Send a message to the user with their account information.  If twitter, include a QR code for scanning.
     """
 
-    if check_mute(message['sender_id'], message['system']):
+    if check_mute(message['sender_id'], message['from_app']):
         logger.info("{}: User has muted bot.".format(datetime.now()))
         return
 
 
-    send_dm(message['sender_id'], account_text, message['system'])
-    send_dm(message['sender_id'], account, message['system'])
+    send_dm(message['sender_id'], account_text, message['from_app'])
+    send_dm(message['sender_id'], account, message['from_app'])
 
 
 def telegram_set_webhook():

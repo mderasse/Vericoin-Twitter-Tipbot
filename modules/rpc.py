@@ -46,29 +46,29 @@ def send_tip(message, users_to_tip, tip_index):
     # bot_status = config.get('main', 'bot_status')
     # if bot_status == 'maintenance':
     #     modules.social.send_dm(message['sender_id'], translations.maintenance_text[message['language']],
-    #                            message['system'])
+    #                            message['from_app'])
     #     return
     # else:
     #     logger.info("{}: sending tip to {}".format(datetime.now(), users_to_tip[tip_index]['receiver_screen_name']))
     #     if str(users_to_tip[tip_index]['receiver_id']) == str(message['sender_id']):
     #         modules.social.send_reply(message,
     #                                   translations.self_tip_text[message['language']].format(CURRENCY.upper(),
-    #                                                                                          message['system']))
+    #                                                                                          message['from_app']))
 
     #         logger.info("{}: User tried to tip themself").format(datetime.now())
     #         return
 
     #     # Check if the receiver has an account
-    #     receiver_account_get = ("SELECT account FROM users where user_id = {} and users.system = '{}'"
-    #                             .format(int(users_to_tip[tip_index]['receiver_id']), message['system']))
+    #     receiver_account_get = ("SELECT account FROM users where user_id = {} and users.from_app = '{}'"
+    #                             .format(int(users_to_tip[tip_index]['receiver_id']), message['from_app']))
     #     receiver_account_data = modules.db.get_db_data(receiver_account_get)
 
     #     # If they don't, check reserve accounts and assign one.
     #     if not receiver_account_data:
     #         users_to_tip[tip_index]['receiver_account'] = modules.db.get_spare_account()
-    #         create_receiver_account = ("INSERT INTO users (user_id, system, user_name, account, register) "
+    #         create_receiver_account = ("INSERT INTO users (user_id, from_app, user_name, account, register) "
     #                                    "VALUES(%s, %s, %s, %s, 0)")
-    #         create_receiver_account_values = [users_to_tip[tip_index]['receiver_id'], message['system'],
+    #         create_receiver_account_values = [users_to_tip[tip_index]['receiver_id'], message['from_app'],
     #                                           users_to_tip[tip_index]['receiver_screen_name'],
     #                                           users_to_tip[tip_index]['receiver_account']]
     #         modules.db.set_db_data(create_receiver_account, create_receiver_account_values)
@@ -79,10 +79,10 @@ def send_tip(message, users_to_tip, tip_index):
     #         users_to_tip[tip_index]['receiver_account'] = receiver_account_data[0][0]
 
     #     # Send the tip
-    #     if message['system'] == 'telegram':
-    #         message['tip_id'] = "{}-{}-{}{}".format(message['system'], message['chat_id'], message['id'], tip_index)
+    #     if message['from_app'] == 'telegram':
+    #         message['tip_id'] = "{}-{}-{}{}".format(message['from_app'], message['chat_id'], message['id'], tip_index)
     #     else:
-    #         message['tip_id'] = "{}-{}{}".format(message['system'], message['id'], tip_index)
+    #         message['tip_id'] = "{}-{}{}".format(message['from_app'], message['id'], tip_index)
 
     #     # work = get_pow(message['sender_account'])
     #     work = get_pow_debug(message)
@@ -155,11 +155,11 @@ def send_tip(message, users_to_tip, tip_index):
     #             users_to_tip[tip_index]['balance'] = str(users_to_tip[tip_index]['balance'])
 
     #         # Send a DM to the receiver.  Twitter is removed due to spam issues.
-    #         if message['system'] != 'twitter':
+    #         if message['from_app'] != 'twitter':
     #             modules.social.send_dm(users_to_tip[tip_index]['receiver_id'],
     #                                    translations.receiver_tip_text[users_to_tip[tip_index]['receiver_language']]
     #                                    .format(message['sender_screen_name'], message['tip_amount_text'],
-    #                                            CURRENCY.upper(), CURRENCY.upper(), URL), message['system'])
+    #                                            CURRENCY.upper(), CURRENCY.upper(), URL), message['from_app'])
 
     #     except Exception as e:
     #         logger.info("{}: ERROR IN RECEIVING NEW TIP - POSSIBLE NEW ACCOUNT NOT REGISTERED WITH DPOW: {}"

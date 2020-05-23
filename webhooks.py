@@ -14,7 +14,6 @@ import requests
 import telegram
 import tweepy
 from flask import Flask, render_template, request, Response, redirect, jsonify
-from flask_weasyprint import HTML, render_pdf
 
 import modules.db
 import modules.orchestration
@@ -96,7 +95,7 @@ def tutorial():
 @app.route('/tippers')
 @app.route('/tippers.html')
 def tippers():
-    largest_tip = ("SELECT user_name, amount, account, a.system, timestamp "
+    largest_tip = ("SELECT user_name, amount, account, a.from_app, timestamp "
                    "FROM {0}.tip_list AS a, {0}.users AS b "
                    "WHERE user_id = sender_id "
                    "AND user_name IS NOT NULL "
@@ -107,7 +106,7 @@ def tippers():
                    "ORDER BY timestamp DESC "
                    "LIMIT 1;".format(DB_SCHEMA))
 
-    tippers_call = ("SELECT user_name AS 'screen_name', sum(amount) AS 'total_tips', account, b.system "
+    tippers_call = ("SELECT user_name AS 'screen_name', sum(amount) AS 'total_tips', account, b.from_app "
                     "FROM {0}.tip_list AS a, {0}.users AS b "
                     "WHERE user_id = sender_id "
                     "AND user_name IS NOT NULL "
@@ -128,9 +127,9 @@ def tippers():
 @app.route('/tiplist')
 def tip_list():
     tip_list_call = ("SELECT DISTINCT t1.user_name AS 'Sender ID', t2.user_name AS 'Receiver ID', t1.amount, "
-                     "t1.account AS 'Sender Account', t2.account AS 'Receiver Account', t1.system, t1.timestamp "
+                     "t1.account AS 'Sender Account', t2.account AS 'Receiver Account', t1.from_app, t1.timestamp "
                      "FROM "
-                     "(SELECT user_name, amount, account, a.system, timestamp "
+                     "(SELECT user_name, amount, account, a.from_app, timestamp "
                      "FROM {0}.tip_list AS a, {0}.users AS b "
                      "WHERE user_id = sender_id "
                      "AND user_name IS NOT NULL "
@@ -162,16 +161,16 @@ def index():
     if price > .01:
         price = round(price, 2)
 
-    total_tipped_coin = ("SELECT tip_list.system, sum(amount) AS total "
+    total_tipped_coin = ("SELECT tip_list.from_app, sum(amount) AS total "
                          "FROM {0}.tip_list "
                          "WHERE receiver_id IN (SELECT user_id FROM {0}.users) "
-                         "GROUP BY system "
+                         "GROUP BY from_app "
                          "ORDER BY total DESC".format(DB_SCHEMA))
 
-    total_tipped_number = ("SELECT tip_list.system, count(system) AS notips "
+    total_tipped_number = ("SELECT tip_list.from_app, count(from_app) AS notips "
                            "FROM {0}.tip_list "
                            "WHERE receiver_id IN (SELECT user_id FROM {0}.users)"
-                           "GROUP BY tip_list.system "
+                           "GROUP BY tip_list.from_app "
                            "ORDER BY notips DESC".format(DB_SCHEMA))
 
     total_tipped_coin_table = modules.db.get_db_data(total_tipped_coin)
@@ -192,7 +191,7 @@ def index():
 def get_user_address_twitter(username):
     # Returns the address of the provided username
     address_call = ("SELECT account FROM users "
-                   "WHERE user_name = %s AND system = 'twitter'")
+                   "WHERE user_name = %s AND from_app = 'twitter'")
     address_values = [username,]
     address_return = modules.db.get_db_data_new(address_call, address_values)
     try:
@@ -211,7 +210,7 @@ def get_user_address_twitter(username):
 @app.route('/users/<address>', methods=["GET"])
 def get_user_from_address(address):
     # Returns the user info of the provided address
-    address_call = ("SELECT user_id, system, user_name FROM users "
+    address_call = ("SELECT user_id, from_app, user_name FROM users "
                    "WHERE account = %s")
     address_values = [address,]
     address_return = modules.db.get_db_data_new(address_call, address_values)
@@ -219,7 +218,7 @@ def get_user_from_address(address):
         if address_return[0] is not None:
             json_response = {
                 'user_id': address_return[0][0],
-                'system': address_return[0][1],
+                'from_app': address_return[0][1],
                 'user_name': address_return[0][2]
             }
             response = jsonify(json_response)
@@ -235,7 +234,7 @@ def get_user_from_address(address):
 def get_user_address_telegram(username):
     # Returns the address of the provided username
     address_call = ("SELECT account FROM users "
-                   "WHERE user_id = %s AND system = 'telegram'")
+                   "WHERE user_id = %s AND from_app = 'telegram'")
     address_values = [username,]
     address_return = modules.db.get_db_data_new(address_call, address_values)
     try:
@@ -256,7 +255,7 @@ def get_user_address_telegram(username):
 def get_all_users_telegram():
     # Returns the address of the provided username
     address_call = ("SELECT user_id, user_name, account FROM users "
-                   "WHERE system = 'telegram'")
+                   "WHERE from_app = 'telegram'")
     address_values = []
     address_return = modules.db.get_db_data_new(address_call, address_values)
     json_response = []
@@ -281,7 +280,7 @@ def get_all_users_telegram():
 def get_all_users_twitter():
     # Returns the address of the provided username
     address_call = ("SELECT user_id, user_name, account FROM users "
-                   "WHERE system = 'twitter'")
+                   "WHERE from_app = 'twitter'")
     address_values = []
     address_return = modules.db.get_db_data_new(address_call, address_values)
     json_response = []
@@ -331,7 +330,7 @@ def get_twitter_account(screen_name):
 
         if user is not None:
             account_call = ("SELECT account FROM users "
-                            "WHERE user_id = '{}' AND users.system = 'twitter';".format(user.id_str))
+                            "WHERE user_id = '{}' AND users.from_app = 'twitter';".format(user.id_str))
             account_return = modules.db.get_db_data(account_call)
             balance_return = rpc.get_account_balance(account_return[0][0])
             account_dict = {
@@ -415,7 +414,7 @@ def telegram_event():
         # tip_id:                 ID of the tip, used to prevent double sending of tips.  Comprised of
         #                         message['id'] + index of user in users_to_tip
         # send_hash:              Hash of the send RPC transaction
-        # system:                 System that the command was sent from
+        # from_app:                 from_app that the command was sent from
     }
 
     users_to_tip = [
@@ -426,7 +425,7 @@ def telegram_event():
         #    receiver_account:       coin account of receiver
         #    receiver_register:      Registration status with Tip Bot of reciever account
     ]
-    message['system'] = 'telegram'
+    message['from_app'] = 'telegram'
     request_json = request.get_json()
     if 'message' in request_json.keys():
         if request_json['message']['chat']['type'] == 'private':
@@ -456,7 +455,7 @@ def telegram_event():
             logger.info("{}: action identified: {}".format(datetime.now(), message['dm_action']))
 
             # Update DB with new DM
-            # dm_insert_call = ("INSERT INTO dm_list (dm_id, processed, sender_id, dm_text, system) "
+            # dm_insert_call = ("INSERT INTO dm_list (dm_id, processed, sender_id, dm_text, from_app) "
             #                   "VALUES (%s, 0, %s, %s, 'telegram')")
             # dm_insert_values = [message['dm_id'], message['sender_id'], message['text']]
             # err = modules.db.set_db_data(dm_insert_call, dm_insert_values)
@@ -515,7 +514,7 @@ def telegram_event():
                             if bot_status == 'maintenance':
                                 modules.social.send_dm(message['sender_id'],
                                                        translations.maintenance_text[message['language']],
-                                                       message['system'])
+                                                       message['from_app'])
                             else:
                                 modules.orchestration.tip_process(message, users_to_tip, request_json)
                         except Exception as e:
@@ -584,7 +583,7 @@ def twitter_event_received():
     message = {}
     users_to_tip = []
 
-    message['system'] = 'twitter'
+    message['from_app'] = 'twitter'
     request_json = request.get_json()
     auth_header = request.headers.get('X-Twitter-Webhooks-Signature')
     request_data = request.get_data()
@@ -642,7 +641,7 @@ def twitter_event_received():
         logger.info("Processing direct message.")
 
         # Update DB with new DM
-        dm_insert_call = ("INSERT INTO dm_list (dm_id, processed, sender_id, dm_text, system) "
+        dm_insert_call = ("INSERT INTO dm_list (dm_id, processed, sender_id, dm_text, from_app) "
                           "VALUES (%s, 0, %s, %s, 'twitter')")
         dm_insert_values = [message['dm_id'], message['sender_id'], message['text']]
         err = modules.db.set_db_data(dm_insert_call, dm_insert_values)
@@ -688,7 +687,7 @@ def twitter_event_received():
                     if bot_status == 'maintenance':
                         modules.social.send_dm(message['sender_id'],
                                                translations.maintenance_text[message['language']],
-                                               message['system'])
+                                               message['from_app'])
                     else:
                         # Favoriting has been removed due to possible issues with Twitter automation rules.
                         # api.create_favorite(message['id'])

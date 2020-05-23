@@ -9,4 +9,3 @@ flask_weasyprint
 mysqlclient
 python-bitcoinrpc
 TwitterAPI
-cairocffi

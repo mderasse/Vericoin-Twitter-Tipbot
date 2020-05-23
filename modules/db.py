@@ -84,12 +84,12 @@ def create_triggers():
     user_trigger = """
                    CREATE TRIGGER `users_AFTER_INSERT` AFTER INSERT ON `users` FOR EACH ROW 
                    BEGIN 
-                       INSERT INTO `languages` (`user_id`, `system`) 
-                       VALUES (NEW.`user_id`, NEW.`system`);
-                       INSERT INTO `return_address` (`user_id`, `system`, `last_action`) 
-                       VALUES (NEW.`user_id`, NEW.`system`, now());
-                       INSERT INTO `donation_info` (`user_id`, `system`)
-                       VALUES (NEW.`user_id`, NEW.`system`);
+                       INSERT INTO `languages` (`user_id`, `from_app`) 
+                       VALUES (NEW.`user_id`, NEW.`from_app`);
+                       INSERT INTO `return_address` (`user_id`, `from_app`, `last_action`) 
+                       VALUES (NEW.`user_id`, NEW.`from_app`, now());
+                       INSERT INTO `donation_info` (`user_id`, `from_app`)
+                       VALUES (NEW.`user_id`, NEW.`from_app`);
                    END
                    """
     tip_list_trigger = """
@@ -97,7 +97,7 @@ def create_triggers():
                        BEGIN 
                            UPDATE `return_address` SET `last_action` = now() 
                            WHERE `user_id` = new.`sender_id` 
-                           AND `system` = new.`system`;
+                           AND `from_app` = new.`from_app`;
                        END
                        """
     dm_list_trigger = """
@@ -105,7 +105,7 @@ def create_triggers():
                       BEGIN 
                           UPDATE `return_address` SET `last_action` = now() 
                           WHERE `user_id` = new.`sender_id` 
-                          AND `system` = new.`system`;
+                          AND `from_app` = new.`from_app`;
                       END;
                       """
 
@@ -126,7 +126,7 @@ def create_tables():
             sql = """
             CREATE TABLE IF NOT EXISTS `users` (
               `user_id` bigint(255) NOT NULL,
-              `system` varchar(45) DEFAULT NULL,
+              `from_app` varchar(45) DEFAULT NULL,
               `user_name` varchar(100) DEFAULT NULL,
               `account` varchar(100) NOT NULL,
               `register` tinyint(1) NOT NULL DEFAULT '0',
@@ -169,7 +169,7 @@ def create_tables():
               `processed` tinyint(1) DEFAULT NULL,
               `sender_id` bigint(255) NOT NULL,
               `receiver_id` bigint(255) NOT NULL,
-              `system` varchar(45) DEFAULT NULL,
+              `from_app` varchar(45) DEFAULT NULL,
               `dm_text` text DEFAULT NULL,
               `amount` decimal(10,5) DEFAULT NULL,
               `timestamp` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -187,7 +187,7 @@ def create_tables():
             sql = """
             CREATE TABLE IF NOT EXISTS `dm_list` (
              `dm_id` bigint(255) NOT NULL,
-             `tx_id` varchar(100) GENERATED ALWAYS AS (concat('tip-',`dm_id`)) STORED,
+             `tx_id` varchar(100) GENERATED ALWAYS AS (concat('tip-',`dm_id`)) PERSISTENT,
              `processed` tinyint(1) NOT NULL,
              `sender_id` bigint(255) NOT NULL,
              `receiver_id` bigint(255) DEFAULT NULL,
@@ -211,7 +211,7 @@ def create_tables():
                    CREATE TABLE IF NOT EXISTS `languages` (
                      `user_id` bigint(255) NOT NULL,
                      `language_code` varchar(2) CHARACTER SET utf8mb4 NOT NULL DEFAULT 'en',
-                     `system` varchar(45) CHARACTER SET utf8mb4 NOT NULL,
+                     `from_app` varchar(45) CHARACTER SET utf8mb4 NOT NULL,
                      PRIMARY KEY (`user_id`),
                      UNIQUE KEY `user_id_UNIQUE` (`user_id`),
                      CONSTRAINT `user_key` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
@@ -227,10 +227,10 @@ def create_tables():
             sql = """
                   CREATE TABLE IF NOT EXISTS `return_address` (
                     `user_id` bigint(255) NOT NULL,
-                    `system` varchar(45) NOT NULL,
+                    `from_app` varchar(45) NOT NULL,
                     `account` varchar(100) DEFAULT NULL,
                     `last_action` datetime DEFAULT CURRENT_TIMESTAMP,
-                    PRIMARY KEY (`user_id`,`system`)
+                    PRIMARY KEY (`user_id`,`from_app`)
                   ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
                    """
             db_cursor.execute(sql)
@@ -315,10 +315,10 @@ def set_db_data_tip(message, users_to_tip, t_index):
     try:
         db_cursor = db.cursor()
         db_cursor.execute(
-            "INSERT INTO tip_list (dm_id, tx_id, processed, sender_id, receiver_id, system, dm_text, amount)"
+            "INSERT INTO tip_list (dm_id, tx_id, processed, sender_id, receiver_id, from_app, dm_text, amount)"
             " VALUES (%s, %s, 2, %s, %s, %s, %s, %s)",
             (message['id'], message['tip_id'], message['sender_id'],
-             users_to_tip[t_index]['receiver_id'], message['system'], message['text'],
+             users_to_tip[t_index]['receiver_id'], message['from_app'], message['text'],
              Decimal(message['tip_amount'])))
         db.commit()
         db_cursor.close()

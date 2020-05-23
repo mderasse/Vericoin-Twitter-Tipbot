@@ -45,7 +45,7 @@ def parse_action(message):
     if bot_status == 'maintenance':
         modules.social.send_dm(message['sender_id'],
                                translations.maintenance_text[message['language']].format(BOT_NAME_TWITTER),
-                               message['system'])
+                               message['from_app'])
         return ''
 
     tip_commands = modules.translations.coin_tip_commands[message['language']]
@@ -130,7 +130,7 @@ def parse_action(message):
                 modules.social.send_dm(message['sender_id'],
                                        translations.redirect_tip_text[message['language']].format(BOT_NAME_TWITTER,
                                                                                                   tip_commands[0]),
-                                       message['system'])
+                                       message['from_app'])
             except Exception as e:
                 logger.info("Exception: {}".format(e))
                 raise e
@@ -189,7 +189,7 @@ def parse_action(message):
 
                 modules.social.send_dm(message['sender_id'],
                                        translations.private_tip_text[message['language']].format(tip_command),
-                                       message['system'])
+                                       message['from_app'])
             except Exception as e:
                 logger.info("Exception: {}".format(e))
                 raise e
@@ -209,7 +209,7 @@ def parse_action(message):
                 except Exception as f:
                     logger.info("{}: Error in language process: {}".format(datetime.now(), f))
                     modules.social.send_dm(message['sender_id'], translations.missing_language[message['language']],
-                                           message['system'])
+                                           message['from_app'])
             except Exception as e:
                 logger.info("Exception: {}".format(e))
                 raise e
@@ -262,7 +262,7 @@ def parse_action(message):
         if new_pid == 0:
             try:
                 modules.social.send_dm(message['sender_id'], translations.wrong_format_text[message['language']],
-                                       message['system'])
+                                       message['from_app'])
                 logger.info('unrecognized syntax')
             except Exception as e:
                 logger.info("Exception: {}".format(e))
@@ -289,7 +289,7 @@ def help_process(message):
                                                                                  BOT_ACCOUNT,
                                                                                  BOT_NAME_TELEGRAM,
                                                                                  tip_command),
-                           message['system'])
+                           message['from_app'])
     logger.info("{}: Help message sent!".format(datetime.now()))
 
 
@@ -310,29 +310,29 @@ def auto_donation_process(message):
             # send a message that the new percentage is not a number
             modules.social.send_dm(message['sender_id'],
                                    translations.auto_donate_notanum[message['language']],
-                                   message['system'])
+                                   message['from_app'])
             return ''
         if 0 <= new_percent <= 100:
             # update the donation percentage
             auto_donate_call = ("UPDATE donation_info SET donation_percent = %s "
-                                "WHERE user_id = %s AND system = %s ")
-            auto_donate_values = [int(new_percent), message['sender_id'], message['system']]
+                                "WHERE user_id = %s AND from_app = %s ")
+            auto_donate_values = [int(new_percent), message['sender_id'], message['from_app']]
             modules.db.set_db_data(auto_donate_call, auto_donate_values)
             modules.social.send_dm(message['sender_id'],
                                    translations.auto_donate_success[message['language']].format(int(new_percent)),
-                                   message['system'])
+                                   message['from_app'])
 
         else:
             # send a message that the new percentage must be greater than or equal to zero, but less than or equal to 100
             modules.social.send_dm(message['sender_id'],
                                    translations.auto_donate_negative[message['language']],
-                                   message['system'])
+                                   message['from_app'])
 
     else:
         # send a message that they didn't include a new percent to update to
         modules.social.send_dm(message['sender_id'],
                                translations.auto_donate_missing_num[message['language']],
-                               message['system'])
+                               message['from_app'])
 
 
 def mute_process(message, mute_value):
@@ -340,25 +340,25 @@ def mute_process(message, mute_value):
     Update user's mute preferences to prevent or resume messaging / replies.
     """
     logger.info("{}: in mute process".format(datetime.now()))
-    account_check_call = ("SELECT mute FROM users WHERE user_id = {} AND users.system = '{}'"
-                          .format(message['sender_id'], message['system']))
+    account_check_call = ("SELECT mute FROM users WHERE user_id = {} AND users.from_app = '{}'"
+                          .format(message['sender_id'], message['from_app']))
     data = modules.db.get_db_data(account_check_call)
     if not data:
         # Create an account for the user
         sender_account = modules.db.get_spare_account()
-        account_create_call = ("INSERT INTO users (user_id, system, user_name, account, register, mute) "
+        account_create_call = ("INSERT INTO users (user_id, from_app, user_name, account, register, mute) "
                                "VALUES(%s, %s, %s, %s, 1, %s)")
-        account_create_values = [message['sender_id'], message['system'], message['sender_screen_name'], sender_account, mute_value]
+        account_create_values = [message['sender_id'], message['from_app'], message['sender_screen_name'], sender_account, mute_value]
         modules.db.set_db_data(account_create_call, account_create_values)
     else:
-        mute_call = ("UPDATE users SET mute = %s WHERE user_id = %s AND system = %s")
-        mute_values = [mute_value, message['sender_id'], message['system']]
+        mute_call = ("UPDATE users SET mute = %s WHERE user_id = %s AND from_app = %s")
+        mute_values = [mute_value, message['sender_id'], message['from_app']]
         modules.db.set_db_data(mute_call, mute_values)
     
     if mute_value == 1:
-        modules.social.send_dm(message['sender_id'], translations.mute[message['language']], message['system'])
+        modules.social.send_dm(message['sender_id'], translations.mute[message['language']], message['from_app'])
     else:
-        modules.social.send_dm(message['sender_id'], translations.unmute[message['language']], message['system'])
+        modules.social.send_dm(message['sender_id'], translations.unmute[message['language']], message['from_app'])
 
 
 def balance_process(message):
@@ -367,18 +367,18 @@ def balance_process(message):
     """
     logger.info("{}: In balance process".format(datetime.now()))
     balance_call = ("SELECT account, register FROM users WHERE user_id = {} "
-                    "AND users.system = '{}'".format(message['sender_id'], message['system']))
+                    "AND users.from_app = '{}'".format(message['sender_id'], message['from_app']))
     data = modules.db.get_db_data(balance_call)
     if not data:
         logger.info("{}: User tried to check balance without an account".format(datetime.now()))
-        modules.social.send_dm(message['sender_id'], translations.no_account_text['language'], message['system'])
+        modules.social.send_dm(message['sender_id'], translations.no_account_text['language'], message['from_app'])
     else:
         message['sender_account'] = data[0][0]
         sender_register = data[0][1]
 
         if sender_register == 0:
-            set_register_call = "UPDATE users SET register = 1 WHERE user_id = %s AND users.system = %s AND register = 0"
-            set_register_values = [message['sender_id'], message['system']]
+            set_register_call = "UPDATE users SET register = 1 WHERE user_id = %s AND users.from_app = %s AND register = 0"
+            set_register_values = [message['sender_id'], message['from_app']]
             modules.db.set_db_data(set_register_call, set_register_values)
         new_pid = os.fork()
         if new_pid == 0:
@@ -393,7 +393,7 @@ def balance_process(message):
                                            CURRENCY.upper(),
                                            message['sender_pending'],
                                            CURRENCY.upper()),
-                                   message['system'])
+                                   message['from_app'])
             logger.info("{}: Balance Message Sent!".format(datetime.now()))
             return ''
 
@@ -404,16 +404,16 @@ def register_process(message):
     reply with their account number.
     """
     logger.info("{}: In register process.".format(datetime.now()))
-    register_call = ("SELECT account, register FROM users WHERE user_id = {} AND users.system = '{}'"
-                     .format(message['sender_id'], message['system']))
+    register_call = ("SELECT account, register FROM users WHERE user_id = {} AND users.from_app = '{}'"
+                     .format(message['sender_id'], message['from_app']))
     data = modules.db.get_db_data(register_call)
 
     if not data:
         # Create an account for the user
         sender_account = modules.db.get_spare_account()
-        account_create_call = ("INSERT INTO users (user_id, system, user_name, account, register) "
+        account_create_call = ("INSERT INTO users (user_id, from_app, user_name, account, register) "
                                "VALUES(%s, %s, %s, %s, 1)")
-        account_create_values = [message['sender_id'], message['system'], message['sender_screen_name'], sender_account]
+        account_create_values = [message['sender_id'], message['from_app'], message['sender_screen_name'], sender_account]
         modules.db.set_db_data(account_create_call, account_create_values)
         try:
             account_register_text = translations.account_register_text[message['language']]
@@ -453,14 +453,14 @@ def account_process(message):
     """
     logger.info("{}: In account process.".format(datetime.now()))
     sender_account_call = (
-        "SELECT account, register FROM users WHERE user_id = {} AND users.system = '{}'".format(message['sender_id'],
-                                                                                                message['system']))
+        "SELECT account, register FROM users WHERE user_id = {} AND users.from_app = '{}'".format(message['sender_id'],
+                                                                                                message['from_app']))
     account_data = modules.db.get_db_data(sender_account_call)
     if not account_data:
         sender_account = modules.db.get_spare_account()
-        account_create_call = ("INSERT INTO users (user_id, system, user_name, account, register) "
+        account_create_call = ("INSERT INTO users (user_id, from_app, user_name, account, register) "
                                "VALUES(%s, %s, %s, %s, 1)")
-        account_create_values = [message['sender_id'], message['system'], message['sender_screen_name'], sender_account]
+        account_create_values = [message['sender_id'], message['from_app'], message['sender_screen_name'], sender_account]
         modules.db.set_db_data(account_create_call, account_create_values)
 
         account_create_text = translations.account_create_text[message['language']]
@@ -474,8 +474,8 @@ def account_process(message):
 
         if sender_register == 0:
             set_register_call = (
-                "UPDATE users SET register = 1 WHERE user_id = %s AND users.system = %s AND register = 0")
-            set_register_values = [message['sender_id'], message['system']]
+                "UPDATE users SET register = 1 WHERE user_id = %s AND users.from_app = %s AND register = 0")
+            set_register_values = [message['sender_id'], message['from_app']]
             modules.db.set_db_data(set_register_call, set_register_values)
 
         account_text = translations.account_text[message['language']]
@@ -493,14 +493,14 @@ def withdraw_process(message):
     # check if there is a 2nd argument
     if 3 >= len(message['dm_array']) >= 2:
         # if there is, retrieve the sender's account and wallet
-        withdraw_account_call = ("SELECT account, register FROM users WHERE user_id = {} AND users.system = '{}'"
-                                 .format(message['sender_id'], message['system']))
+        withdraw_account_call = ("SELECT account, register FROM users WHERE user_id = {} AND users.from_app = '{}'"
+                                 .format(message['sender_id'], message['from_app']))
         withdraw_data = modules.db.get_db_data(withdraw_account_call)
 
         if not withdraw_data:
 
             modules.social.send_dm(message['sender_id'], translations.no_account_text[message['language']],
-                                   message['system'])
+                                   message['from_app'])
             logger.info("{}: User tried to withdraw with no account".format(datetime.now()))
 
         else:
@@ -509,8 +509,8 @@ def withdraw_process(message):
 
             if sender_register == 0:
                 set_register_call = (
-                    "UPDATE users SET register = 1 WHERE user_id = %s AND users.system = %s AND register = 0")
-                set_register_values = [message['sender_id'], message['system']]
+                    "UPDATE users SET register = 1 WHERE user_id = %s AND users.from_app = %s AND register = 0")
+                set_register_values = [message['sender_id'], message['from_app']]
                 modules.db.set_db_data(set_register_call, set_register_values)
 
             balance_return = rpc.get_account_balance(sender_account)
@@ -522,12 +522,12 @@ def withdraw_process(message):
 
             if rpc.validate_address(receiver_account) is True:
                 modules.social.send_dm(message['sender_id'], translations.invalid_account_text[message['language']],
-                                       message['system'])
+                                       message['from_app'])
                 logger.info("{}: The address is invalid: {}".format(datetime.now(), receiver_account))
 
             elif balance_return['balance'] == 0:
                 modules.social.send_dm(message['sender_id'], translations.no_balance_text[message['language']]
-                                       .format(sender_account), message['system'])
+                                       .format(sender_account), message['from_app'])
                 logger.info("{}: The user tried to withdraw with 0 balance".format(datetime.now()))
 
             else:
@@ -538,14 +538,14 @@ def withdraw_process(message):
                         logger.info("{}: withdraw no number ERROR: {}".format(datetime.now(), e))
                         modules.social.send_dm(message['sender_id'],
                                                translations.invalid_amount_text[message['language']],
-                                               message['system'])
+                                               message['from_app'])
                         return
                     withdraw_amount_raw = int(withdraw_amount)
                     if Decimal(withdraw_amount_raw) > Decimal(balance_return['balance']):
                         modules.social.send_dm(message['sender_id'],
                                                translations.not_enough_balance_text[message['language']].format(
                                                    CURRENCY),
-                                               message['system'])
+                                               message['from_app'])
                         return
                 else:
                     withdraw_amount_raw = balance_return['balance']
@@ -556,13 +556,13 @@ def withdraw_process(message):
                 logger.info("{}: send_hash = {}".format(datetime.now(), send_hash))
                 # respond that the withdraw has been processed
                 modules.social.send_dm(message['sender_id'], translations.withdraw_text[message['language']]
-                                       .format(withdraw_amount, CURRENCY, EXPLORER, send_hash), message['system'])
+                                       .format(withdraw_amount, CURRENCY, EXPLORER, send_hash), message['from_app'])
                 logger.info("{}: Withdraw processed.  Hash: {}".format(datetime.now(), send_hash))
     else:
         modules.social.send_dm(message['sender_id'],
                                translations.incorrect_withdraw_text[message['language']].format(BOT_ACCOUNT,
                                                                                                 CURRENCY),
-                               message['system'])
+                               message['from_app'])
         logger.info("{}: User sent a withdraw with invalid syntax.".format(datetime.now()))
 
 
@@ -575,8 +575,8 @@ def donate_process(message):
 
     if len(message['dm_array']) >= 2:
         sender_account_call = (
-            "SELECT account FROM users where user_id = {} and users.system = '{}'".format(message['sender_id'],
-                                                                                          message['system']))
+            "SELECT account FROM users where user_id = {} and users.from_app = '{}'".format(message['sender_id'],
+                                                                                          message['from_app']))
         donate_data = modules.db.get_db_data(sender_account_call)
         sender_account = donate_data[0][0]
         send_amount = message['dm_array'][1]
@@ -590,7 +590,7 @@ def donate_process(message):
         except Exception as e:
             logger.info("{}: ERROR IN CONVERTING DONATION AMOUNT: {}".format(datetime.now(), e))
             modules.social.send_dm(message['sender_id'], translations.wrong_donate_text[message['language']],
-                                   message['system'])
+                                   message['from_app'])
             return ''
         logger.info("balance: {} - send_amount: {}".format(Decimal(balance), Decimal(send_amount)))
         # We need to reduce the send_amount for a proper comparison - Decimal will not store exact amounts
@@ -601,12 +601,12 @@ def donate_process(message):
                                    .format(balance,
                                            CURRENCY.upper(),
                                            Decimal(send_amount)),
-                                   message['system'])
+                                   message['from_app'])
             logger.info("{}: User tried to donate more than their balance.".format(datetime.now()))
 
         elif Decimal(send_amount) < Decimal(MIN_TIP):
             modules.social.send_dm(message['sender_id'], translations.small_donate_text[message['language']]
-                                   .format(MIN_TIP), message['system'])
+                                   .format(MIN_TIP), message['from_app'])
             logger.info("{}: User tried to donate less than the min tip".format(datetime.now()))
             return ''
         else:
@@ -622,13 +622,13 @@ def donate_process(message):
             logger.info("{}: send_hash = {}".format(datetime.now(), send_hash))
 
             modules.social.send_dm(message['sender_id'], translations.donate_text[message['language']]
-                                   .format(send_amount, CURRENCY, EXPLORER, send_hash), message['system'])
+                                   .format(send_amount, CURRENCY, EXPLORER, send_hash), message['from_app'])
             logger.info("{}: {} coin donation processed.  Hash: {}".format(datetime.now(), Decimal(send_amount),
                                                                             send_hash))
 
     else:
         modules.social.send_dm(message['sender_id'], translations.incorrect_donate_text[message['language']],
-                               message['system'])
+                               message['from_app'])
         logger.info("{}: User sent a donation with invalid syntax".format(datetime.now()))
 
 
@@ -647,7 +647,7 @@ def tip_process(message, users_to_tip, request_json):
             tip_commands.append(command)
 
     message, users_to_tip = modules.social.set_tip_list(message, users_to_tip, request_json)
-    if len(users_to_tip) < 1 and message['system'] != 'telegram':
+    if len(users_to_tip) < 1 and message['from_app'] != 'telegram':
         modules.social.send_reply(message, translations.no_users_text[message['language']].format(BOT_NAME_TWITTER,
                                                                                                   tip_commands[0]))
         return
@@ -675,7 +675,7 @@ def tip_process(message, users_to_tip, request_json):
                                        message['tip_amount_text'],
                                        CURRENCY.upper(), EXPLORER,
                                        message['sender_account']),
-                                   message['system'])
+                                   message['from_app'])
         except KeyError:
             modules.social.send_reply(message, translations.multi_tip_success['en']
                                       .format(message['tip_amount_text'], CURRENCY.upper(), EXPLORER,
@@ -684,25 +684,25 @@ def tip_process(message, users_to_tip, request_json):
                                    translations.multi_tip_success_dm['en'].format(message['tip_amount_text'],
                                                                                   CURRENCY.upper(), EXPLORER,
                                                                                   message['sender_account']),
-                                   message['system'])
+                                   message['from_app'])
 
     elif len(users_to_tip) == 1:
         try:
             modules.social.send_reply(message, translations.tip_success[message['language']]
                                       .format(message['tip_amount_text'], CURRENCY.upper(), EXPLORER,
                                               message['send_hash']))
-            if message['system'] != 'twitter':
+            if message['from_app'] != 'twitter':
                 modules.social.send_dm(message['sender_id'], translations.tip_success_dm[message['language']]
                                        .format(message['tip_amount_text'], CURRENCY.upper(), EXPLORER,
-                                               message['send_hash']), message['system'])
+                                               message['send_hash']), message['from_app'])
         except KeyError:
             modules.social.send_reply(message, translations.tip_success['en']
                                       .format(message['tip_amount_text'], CURRENCY.upper(), EXPLORER,
                                               message['send_hash']))
-            if message['system'] != 'twitter':
+            if message['from_app'] != 'twitter':
                 modules.social.send_dm(message['sender_id'], translations.tip_success_dm['en']
                                        .format(message['tip_amount_text'], CURRENCY.upper(), EXPLORER,
-                                               message['send_hash']), message['system'])
+                                               message['send_hash']), message['from_app'])
 
 
 def set_return_address_process(message):
@@ -713,28 +713,28 @@ def set_return_address_process(message):
     if len(message['dm_array']) <= 1:
         modules.social.send_dm(message['sender_id'],
                                translations.set_return_invalid_account[message['language']],
-                               message['system'])
+                               message['from_app'])
         return
 
     
     if rpc.validate_address(message['dm_array'][1]) is False:
         modules.social.send_dm(message['sender_id'],
                                translations.set_return_invalid_account[message['language']],
-                               message['system'])
+                               message['from_app'])
         return
     else:
-        set_return_address_call = "UPDATE return_address SET account = %s WHERE system = %s AND user_id = %s "
-        set_return_address_values = [message['dm_array'][1], message['system'], message['sender_id']]
+        set_return_address_call = "UPDATE return_address SET account = %s WHERE from_app = %s AND user_id = %s "
+        set_return_address_values = [message['dm_array'][1], message['from_app'], message['sender_id']]
         logger.info("set_return_address_call: {}".format(set_return_address_call))
         logger.info("set_return_address_values: {}".format(set_return_address_values))
         modules.db.set_db_data(set_return_address_call, set_return_address_values)
         logger.info("{}: {} return address set for user {} as {}".format(datetime.now(),
-                                                                          message['system'],
+                                                                          message['from_app'],
                                                                           message['sender_id'],
                                                                           message['dm_array'][1]))
         modules.social.send_dm(message['sender_id'],
                                translations.set_return_success[message['language']].format(message['dm_array'][1]),
-                               message['system'])
+                               message['from_app'])
     return
 
 
@@ -747,18 +747,18 @@ def language_process(message, new_language):
     if new_language.lower() not in translations.language_dict.keys():
         modules.social.send_dm(message['sender_id'],
                                translations.missing_language[message['language']],
-                               message['system'])
+                               message['from_app'])
     else:
-        set_language_call = "UPDATE languages SET language_code = %s WHERE user_id = %s AND system = %s"
-        set_language_values = [translations.language_dict[new_language], message['sender_id'], message['system']]
+        set_language_call = "UPDATE languages SET language_code = %s WHERE user_id = %s AND from_app = %s"
+        set_language_values = [translations.language_dict[new_language], message['sender_id'], message['from_app']]
         modules.db.set_db_data(set_language_call, set_language_values)
         modules.social.send_dm(message['sender_id'],
                                translations.language_change_success[translations.language_dict[new_language]],
-                               message['system'])
+                               message['from_app'])
 
 
 def language_list_process(message):
     """
     Send a list of languages available for translation.
     """
-    modules.social.send_dm(message['sender_id'], translations.language_list, message['system'])
+    modules.social.send_dm(message['sender_id'], translations.language_list, message['from_app'])
