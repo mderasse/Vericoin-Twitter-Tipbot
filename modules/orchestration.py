@@ -552,12 +552,12 @@ def withdraw_process(message):
                     withdraw_amount = balance_return['balance']
                 
                 # XXX - Send balance to account
-
-                logger.info("{}: send_hash = {}".format(datetime.now(), send_hash))
+                #
+                #logger.info("{}: send_hash = {}".format(datetime.now(), send_hash))
                 # respond that the withdraw has been processed
-                modules.social.send_dm(message['sender_id'], translations.withdraw_text[message['language']]
-                                       .format(withdraw_amount, CURRENCY, EXPLORER, send_hash), message['from_app'])
-                logger.info("{}: Withdraw processed.  Hash: {}".format(datetime.now(), send_hash))
+                #modules.social.send_dm(message['sender_id'], translations.withdraw_text[message['language']]
+                #                       .format(withdraw_amount, CURRENCY, EXPLORER, send_hash), message['from_app'])
+                #logger.info("{}: Withdraw processed.  Hash: {}".format(datetime.now(), send_hash))
     else:
         modules.social.send_dm(message['sender_id'],
                                translations.incorrect_withdraw_text[message['language']].format(BOT_ACCOUNT,
@@ -619,12 +619,12 @@ def donate_process(message):
             logger.info(('{}; send_amount_raw: {}'.format(datetime.now(), int(send_amount_raw))))
             # XXX - Need to send donation
 
-            logger.info("{}: send_hash = {}".format(datetime.now(), send_hash))
+            #logger.info("{}: send_hash = {}".format(datetime.now(), send_hash))
 
-            modules.social.send_dm(message['sender_id'], translations.donate_text[message['language']]
-                                   .format(send_amount, CURRENCY, EXPLORER, send_hash), message['from_app'])
-            logger.info("{}: {} coin donation processed.  Hash: {}".format(datetime.now(), Decimal(send_amount),
-                                                                            send_hash))
+            #modules.social.send_dm(message['sender_id'], translations.donate_text[message['language']]
+            #                       .format(send_amount, CURRENCY, EXPLORER, send_hash), message['from_app'])
+            #logger.info("{}: {} coin donation processed.  Hash: {}".format(datetime.now(), Decimal(send_amount),
+            #                                                                send_hash))
 
     else:
         modules.social.send_dm(message['sender_id'], translations.incorrect_donate_text[message['language']],

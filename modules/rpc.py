@@ -2,6 +2,7 @@ from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 import configparser
 import logging
 import os
+import uuid 
 
 # Read config and parse constants
 config = configparser.ConfigParser()
@@ -38,6 +39,17 @@ def validate_address(address):
     result = rpc.validateaddress(address)
 
     return result["isvalid"] == 'true'
+
+def generate_new_account():
+    """
+    Generate a new account
+    """
+    while True:
+        account_name = str(uuid.uuid1())
+        result = rpc.getaddressesbyaccount(account_name)
+        if len(result) == 0:
+            rpc.getnewaddress(account_name)
+            return account_name
 
 def send_tip(message, users_to_tip, tip_index):
     """

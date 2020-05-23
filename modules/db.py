@@ -5,6 +5,7 @@ from datetime import datetime
 from decimal import *
 from logging.handlers import TimedRotatingFileHandler
 
+import modules.rpc as rpc
 import MySQLdb
 
 # Set logging info
@@ -331,23 +332,36 @@ def set_db_data_tip(message, users_to_tip, t_index):
         raise e
 
 
-def set_spare_accounts(accounts):
+def set_spare_account(account):
     """
-    Set DB with spare accounts.
+    Set DB with spare account.
     """
-    insert_accounts_call = "INSERT INTO {}.spare_accounts (account) VALUES ".format(DB_SCHEMA)
-
     try:
-        for index, account in enumerate(accounts):
-            if index == 0:
-                insert_accounts_call += "(%s)"
-            else:
-                insert_accounts_call += ", (%s)"
-        insert_accounts_call += ';'
-        logger.info("insert accounts call: {}".format(insert_accounts_call))
-        set_db_data(insert_accounts_call, accounts)
-
+        insert_account_call = "INSERT INTO {}.spare_accounts (account) VALUES (%s);".format(DB_SCHEMA)
+        logger.info("insert account call: {}".format(insert_account_call))
+        set_db_data(insert_account_call, account)
     except Exception as e:
-        logger.info("Error inserting spare accounts: {}".format(e))
+        logger.info("Error inserting spare account: {}".format(e))
 
-    logger.info("New accounts set in DB.")
+    logger.info("New account set in DB.")
+
+def get_spare_account():
+    """
+    Retrieve an account from the database.
+    """
+    while True:
+        check_accounts_call = "SELECT count(account) FROM {}.spare_accounts;".format(DB_SCHEMA)
+        check_accounts_return = get_db_data(check_accounts_call)
+        if int(check_accounts_return[0][0]) <= 5:
+            account = rpc.generate_new_account()
+            set_spare_account(account)
+        else:
+            break
+
+    get_account_call = "SELECT account FROM {}.spare_accounts LIMIT 1;".format(DB_SCHEMA)
+    spare_account_return = get_db_data(get_account_call)
+
+    remove_account_call = "DELETE FROM {}.spare_accounts WHERE account = %s".format(DB_SCHEMA)
+    set_db_data(remove_account_call, spare_account_return[0])
+
+    return spare_account_return[0][0]
