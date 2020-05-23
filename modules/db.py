@@ -209,6 +209,21 @@ def create_tables():
             logger.info("Checking if dm_list table was created: {}".format(
                 check_table_exists('dm_list')))
 
+        check_exists = check_table_exists('donation_info')
+        if not check_exists:
+            # create donation_info table
+            sql = """
+                  CREATE TABLE IF NOT EXISTS `donation_info` (
+                    `user_id` bigint(255) NOT NULL,
+                    `from_app` varchar(45) NOT NULL,
+                    `donation_percent` int(3) DEFAULT '0',
+                    PRIMARY KEY (`user_id`,`from_app`)
+                  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+                   """
+            db_cursor.execute(sql)
+            logger.info("Checking if donation_info table was created: {}".format(
+                check_table_exists('donation_info')))
+
         check_exists = check_table_exists('languages')
         if not check_exists:
             # create languages table
@@ -236,7 +251,7 @@ def create_tables():
                     `account` varchar(100) DEFAULT NULL,
                     `last_action` datetime DEFAULT CURRENT_TIMESTAMP,
                     PRIMARY KEY (`user_id`,`from_app`)
-                  ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+                  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
                    """
             db_cursor.execute(sql)
             logger.info("Checking if return_address table was created: {}".format(
@@ -250,7 +265,7 @@ def create_tables():
              `account` varchar(100) NOT NULL,
              `address` varchar(100) NOT NULL,
              PRIMARY KEY (`account`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
             """
             db_cursor.execute(sql)
             logger.info("Checking if spare_accounts table was created: {}".format(
