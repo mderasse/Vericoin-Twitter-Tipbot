@@ -45,11 +45,14 @@ def generate_new_account():
     Generate a new account
     """
     while True:
-        account_name = str(uuid.uuid1())
+        account_name = str(uuid.uuid1()).replace("-", "")
         result = rpc.getaddressesbyaccount(account_name)
         if len(result) == 0:
-            rpc.getnewaddress(account_name)
-            return account_name
+            address = rpc.getnewaddress(account_name)
+            return {
+                "account": account_name,
+                "address": address,
+            }
 
 def send_tip(message, users_to_tip, tip_index):
     """

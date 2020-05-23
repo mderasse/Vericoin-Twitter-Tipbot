@@ -95,7 +95,7 @@ def tutorial():
 @app.route('/tippers')
 @app.route('/tippers.html')
 def tippers():
-    largest_tip = ("SELECT user_name, amount, account, a.from_app, timestamp "
+    largest_tip = ("SELECT user_name, amount, address, a.from_app, timestamp "
                    "FROM {0}.tip_list AS a, {0}.users AS b "
                    "WHERE user_id = sender_id "
                    "AND user_name IS NOT NULL "
@@ -106,7 +106,7 @@ def tippers():
                    "ORDER BY timestamp DESC "
                    "LIMIT 1;".format(DB_SCHEMA))
 
-    tippers_call = ("SELECT user_name AS 'screen_name', sum(amount) AS 'total_tips', account, b.from_app "
+    tippers_call = ("SELECT user_name AS 'screen_name', sum(amount) AS 'total_tips', address, b.from_app "
                     "FROM {0}.tip_list AS a, {0}.users AS b "
                     "WHERE user_id = sender_id "
                     "AND user_name IS NOT NULL "
@@ -127,7 +127,7 @@ def tippers():
 @app.route('/tiplist')
 def tip_list():
     tip_list_call = ("SELECT DISTINCT t1.user_name AS 'Sender ID', t2.user_name AS 'Receiver ID', t1.amount, "
-                     "t1.account AS 'Sender Account', t2.account AS 'Receiver Account', t1.from_app, t1.timestamp "
+                     "t1.address AS 'Sender Account', t2.address AS 'Receiver Account', t1.from_app, t1.timestamp "
                      "FROM "
                      "(SELECT user_name, amount, account, a.from_app, timestamp "
                      "FROM {0}.tip_list AS a, {0}.users AS b "
@@ -138,7 +138,7 @@ def tip_list():
                      "ORDER BY timestamp desc "
                      "LIMIT 50) AS t1 "
                      "JOIN "
-                     "(SELECT user_name, account, timestamp "
+                     "(SELECT user_name, address, timestamp "
                      "FROM {0}.tip_list, {0}.users "
                      "WHERE user_id = receiver_id "
                      "AND user_name IS NOT NULL "
@@ -190,14 +190,14 @@ def index():
 @app.route('/users/twitter/<username>', methods=["GET"])
 def get_user_address_twitter(username):
     # Returns the address of the provided username
-    address_call = ("SELECT account FROM users "
+    address_call = ("SELECT address FROM users "
                    "WHERE user_name = %s AND from_app = 'twitter'")
     address_values = [username,]
     address_return = modules.db.get_db_data_new(address_call, address_values)
     try:
         if address_return[0][0] is not None:
             json_response = {
-                "account": address_return[0][0]
+                "address": address_return[0][0]
             }
             response = jsonify(json_response)
             response.headers.add('Access-Control-Allow-Origin', '*')
@@ -211,8 +211,8 @@ def get_user_address_twitter(username):
 def get_user_from_address(address):
     # Returns the user info of the provided address
     address_call = ("SELECT user_id, from_app, user_name FROM users "
-                   "WHERE account = %s")
-    address_values = [address,]
+                   "WHERE address = %s")
+    address_values = [address]
     address_return = modules.db.get_db_data_new(address_call, address_values)
     try:
         if address_return[0] is not None:
@@ -233,14 +233,14 @@ def get_user_from_address(address):
 @app.route('/users/telegram/<username>', methods=["GET"])
 def get_user_address_telegram(username):
     # Returns the address of the provided username
-    address_call = ("SELECT account FROM users "
+    address_call = ("SELECT address FROM users "
                    "WHERE user_id = %s AND from_app = 'telegram'")
     address_values = [username,]
     address_return = modules.db.get_db_data_new(address_call, address_values)
     try:
         if address_return[0][0] is not None:
             json_response = {
-                "account": address_return[0][0]
+                "adress": address_return[0][0]
             }
             response = jsonify(json_response)
             response.headers.add('Access-Control-Allow-Origin', '*')
@@ -254,7 +254,7 @@ def get_user_address_telegram(username):
 @app.route('/users/telegram', methods=["GET"])
 def get_all_users_telegram():
     # Returns the address of the provided username
-    address_call = ("SELECT user_id, user_name, account FROM users "
+    address_call = ("SELECT user_id, user_name, address FROM users "
                    "WHERE from_app = 'telegram'")
     address_values = []
     address_return = modules.db.get_db_data_new(address_call, address_values)
@@ -265,7 +265,7 @@ def get_all_users_telegram():
                 json_response.append({
                     "user_id": user[0],
                     "user_name": user[1],
-                    "account": user[2]
+                    "address": user[2]
                 })
             response = jsonify(json_response)
             response.headers.add('Access-Control-Allow-Origin', '*')
@@ -279,7 +279,7 @@ def get_all_users_telegram():
 @app.route('/users/twitter', methods=["GET"])
 def get_all_users_twitter():
     # Returns the address of the provided username
-    address_call = ("SELECT user_id, user_name, account FROM users "
+    address_call = ("SELECT user_id, user_name, address FROM users "
                    "WHERE from_app = 'twitter'")
     address_values = []
     address_return = modules.db.get_db_data_new(address_call, address_values)
@@ -290,7 +290,7 @@ def get_all_users_twitter():
                 json_response.append({
                     "user_id": user[0],
                     "user_name": user[1],
-                    "account": user[2]
+                    "address": user[2]
                 })
             response = jsonify(json_response)
             response.headers.add('Access-Control-Allow-Origin', '*')
@@ -329,13 +329,13 @@ def get_twitter_account(screen_name):
         user = api.get_user(screen_name)
 
         if user is not None:
-            account_call = ("SELECT account FROM users "
+            account_call = ("SELECT account, address FROM users "
                             "WHERE user_id = '{}' AND users.from_app = 'twitter';".format(user.id_str))
             account_return = modules.db.get_db_data(account_call)
             balance_return = rpc.get_account_balance(account_return[0][0])
             account_dict = {
                 'user_id': user.id_str,
-                'account': account_return[0],
+                'address': account_return[0][1],
                 'balance': str(balance_return['balance']),
                 'pending': str(balance_return['pending'])
             }
@@ -348,7 +348,7 @@ def get_twitter_account(screen_name):
             logger.info('{}: No user found.'.format(datetime.now()))
             account_dict = {
                 'user_id': None,
-                'account': None,
+                'address': None,
                 'balance': None,
                 'pending': None
             }
@@ -361,7 +361,7 @@ def get_twitter_account(screen_name):
         logger.info('{}: ERROR in get_twitter_account(webhooks.py): {}'.format(datetime.now(), e))
         account_dict = {
             'user_id': None,
-            'account': None,
+            'address': None,
             'balance': None,
             'pending': None
         }
@@ -375,7 +375,11 @@ def get_twitter_account(screen_name):
 @app.route('/webhooks/twitter/refreshbalance/<account>', methods=["GET"])
 def refresh_balance(account):
     try:
-        balance_return = rpc.get_account_balance(account)
+        account_call = ("SELECT account FROM users "
+                        "WHERE address = '{}' AND users.from_app = 'twitter';".format(account))
+        account_return = modules.db.get_db_data(account_call)
+        balance_return = rpc.get_account_balance(account_return[0][0])
+
         balance_dict = {
             'balance': balance_return[0],
             'pending': balance_return[1]
@@ -431,7 +435,7 @@ def telegram_event():
         if request_json['message']['chat']['type'] == 'private':
             logger.info("Direct message received in Telegram.  Processing.")
             message['sender_id'] = request_json['message']['from']['id']
-            bot_ids = ['1115793994024464384', '894722023', '966739513195335680', '624103005']
+            bot_ids = ['1166116485']
             if message['sender_id'] in bot_ids:
                 return 'ok'
             try:

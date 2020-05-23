@@ -86,12 +86,7 @@ def get_language(message):
 
         if not data:
             # Create an account for the user
-            sender_account = modules.db.get_spare_account()
-            account_create_call = ("INSERT INTO users (user_id, from_app, user_name, account, register) "
-                                   "VALUES(%s, %s, %s, %s, 1)")
-            account_create_values = [message['sender_id'], message['from_app'], message['sender_screen_name'],
-                                     sender_account]
-            modules.db.set_db_data(account_create_call, account_create_values)
+            modules.db.create_account(message['sender_id'], message['from_app'], message['sender_screen_name'])
         message['language'] = 'en'
 
 
@@ -252,7 +247,7 @@ def validate_tip_amount(message):
         if not message['text'][message['starting_point']][0].isdigit() and message['text'][message['starting_point']][0] != '.':
             symbol = message['text'][message['starting_point']][0]
             fiat_amount = message['text'][message['starting_point']][1:]
-            message['tip_amount'] = Decimal(modules.currency.get_fiat_conversion(symbol, CURRENCY, fiat_amount))
+            message['tip_amount'] = Decimal(modules.currency.get_fiat_conversion(symbol, fiat_amount))
 
             if message['tip_amount'] == -1:
                 send_reply(message, translations.unsupported_fiat[message['language']])

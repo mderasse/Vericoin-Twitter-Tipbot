@@ -131,12 +131,14 @@ def create_tables():
               `from_app` varchar(45) DEFAULT NULL,
               `user_name` varchar(100) DEFAULT NULL,
               `account` varchar(100) NOT NULL,
+              `address` varchar(100) NOT NULL,
               `register` tinyint(1) NOT NULL DEFAULT '0',
               `created_ts` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
               `mute` tinyint(1) NOT NULL DEFAULT '0',
               PRIMARY KEY (`user_id`),
               UNIQUE KEY `user_id_UNIQUE` (`user_id`),
-              UNIQUE KEY `account_UNIQUE` (`account`)
+              UNIQUE KEY `account_UNIQUE` (`account`),
+              UNIQUE KEY `address_UNIQUE` (`address`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
             """
 
@@ -246,6 +248,7 @@ def create_tables():
             sql= """
             CREATE TABLE IF NOT EXISTS `spare_accounts` (
              `account` varchar(100) NOT NULL,
+             `address` varchar(100) NOT NULL,
              PRIMARY KEY (`account`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """
@@ -336,10 +339,11 @@ def set_spare_account(account):
     """
     Set DB with spare account.
     """
+    
     try:
-        insert_account_call = "INSERT INTO {}.spare_accounts (account) VALUES (%s);".format(DB_SCHEMA)
-        logger.info("insert account call: {}".format(insert_account_call))
-        set_db_data(insert_account_call, account)
+        insert_account_call = "INSERT INTO spare_accounts (account, address) VALUES (%s, %s)"
+        insert_account_values = [account["account"], account["address"]]
+        set_db_data(insert_account_call, insert_account_values)
     except Exception as e:
         logger.info("Error inserting spare account: {}".format(e))
 
@@ -358,10 +362,25 @@ def get_spare_account():
         else:
             break
 
-    get_account_call = "SELECT account FROM {}.spare_accounts LIMIT 1;".format(DB_SCHEMA)
+    get_account_call = "SELECT account, address FROM {}.spare_accounts LIMIT 1;".format(DB_SCHEMA)
     spare_account_return = get_db_data(get_account_call)
 
     remove_account_call = "DELETE FROM {}.spare_accounts WHERE account = %s".format(DB_SCHEMA)
-    set_db_data(remove_account_call, spare_account_return[0])
+    set_db_data(remove_account_call, [spare_account_return[0][0]])
 
-    return spare_account_return[0][0]
+    return {
+        "account": spare_account_return[0][0],
+        "address": spare_account_return[0][1],
+    }
+
+def create_account(user_id, from_app, username, register =1, mute =0):
+    """
+    Create an account.
+    """
+    sender_account = get_spare_account()
+    account_create_call = ("INSERT INTO users (user_id, from_app, user_name, account, address, register, mute) "
+                            "VALUES(%s, %s, %s, %s, %s, %s, %s)")
+    account_create_values = [user_id, from_app, username, sender_account["account"], sender_account["address"], register, mute]
+    set_db_data(account_create_call, account_create_values)
+    # Return the account, that's weird but impossible to refacto all in one time
+    return sender_account

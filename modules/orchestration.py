@@ -36,6 +36,9 @@ BOT_ID_TWITTER = config.get(CURRENCY, 'bot_id_twitter')
 BOT_NAME_TWITTER = config.get(CURRENCY, 'bot_name_twitter')
 BOT_NAME_TELEGRAM = config.get(CURRENCY, 'bot_name_telegram')
 BOT_ACCOUNT = config.get(CURRENCY, 'bot_account')
+
+CURRENCY_NAME = config.get(CURRENCY, 'currency_name')
+CURRENCY_SYMBOL = config.get(CURRENCY, 'currency_symbol')
 MIN_TIP = config.get(CURRENCY, 'min_tip')
 EXPLORER = config.get('routes', '{}_explorer'.format(CURRENCY))
 
@@ -284,7 +287,7 @@ def help_process(message):
         tip_command = modules.translations.coin_tip_commands['en'][0]
 
     modules.social.send_dm(message['sender_id'],
-                           translations.help_message[message['language']].format(CURRENCY.title(),
+                           translations.help_message[message['language']].format(CURRENCY_NAME,
                                                                                  BOT_NAME_TWITTER,
                                                                                  BOT_ACCOUNT,
                                                                                  BOT_NAME_TELEGRAM,
@@ -345,11 +348,7 @@ def mute_process(message, mute_value):
     data = modules.db.get_db_data(account_check_call)
     if not data:
         # Create an account for the user
-        sender_account = modules.db.get_spare_account()
-        account_create_call = ("INSERT INTO users (user_id, from_app, user_name, account, register, mute) "
-                               "VALUES(%s, %s, %s, %s, 1, %s)")
-        account_create_values = [message['sender_id'], message['from_app'], message['sender_screen_name'], sender_account, mute_value]
-        modules.db.set_db_data(account_create_call, account_create_values)
+        modules.db.create_account(message['sender_id'], message['from_app'], message['sender_screen_name'], 1, mute_value)
     else:
         mute_call = ("UPDATE users SET mute = %s WHERE user_id = %s AND from_app = %s")
         mute_values = [mute_value, message['sender_id'], message['from_app']]
@@ -404,44 +403,41 @@ def register_process(message):
     reply with their account number.
     """
     logger.info("{}: In register process.".format(datetime.now()))
-    register_call = ("SELECT account, register FROM users WHERE user_id = {} AND users.from_app = '{}'"
+    register_call = ("SELECT address, register FROM users WHERE user_id = {} AND users.from_app = '{}'"
                      .format(message['sender_id'], message['from_app']))
     data = modules.db.get_db_data(register_call)
 
     if not data:
         # Create an account for the user
-        sender_account = modules.db.get_spare_account()
-        account_create_call = ("INSERT INTO users (user_id, from_app, user_name, account, register) "
-                               "VALUES(%s, %s, %s, %s, 1)")
-        account_create_values = [message['sender_id'], message['from_app'], message['sender_screen_name'], sender_account]
-        modules.db.set_db_data(account_create_call, account_create_values)
+        sender_data = modules.db.create_account(message['sender_id'], message['from_app'], message['sender_screen_name'])
+        sender_address = sender_data["address"]
         try:
             account_register_text = translations.account_register_text[message['language']]
-            modules.social.send_account_message(account_register_text, message, sender_account)
+            modules.social.send_account_message(account_register_text, message, sender_address)
         except KeyError:
             account_register_text = "You did not have an account before you set your language.  I have created " \
                                     "an account for you:"
-            modules.social.send_account_message(account_register_text, message, sender_account)
+            modules.social.send_account_message(account_register_text, message, sender_address)
 
         logger.info("{}: Register successful!".format(datetime.now()))
 
     elif data[0][1] == 0:
         # The user has an account, but needed to register, so send a message to the user with their account
-        sender_account = data[0][0]
+        sender_address = data[0][0]
         account_registration_update = "UPDATE users SET register = 1 WHERE user_id = %s AND register = 0"
-        account_registration_values = [message['sender_id'], ]
+        account_registration_values = [message['sender_id']]
         modules.db.set_db_data(account_registration_update, account_registration_values)
 
         account_register_text = translations.account_register_text[message['language']]
-        modules.social.send_account_message(account_register_text, message, sender_account)
+        modules.social.send_account_message(account_register_text, message, sender_address)
 
         logger.info("{}: User has an account, but needed to register.  Message sent".format(datetime.now()))
 
     else:
         # The user had an account and already registered, so let them know their account.
-        sender_account = data[0][0]
+        sender_address = data[0][0]
         account_already_registered = translations.account_already_registered[message['language']]
-        modules.social.send_account_message(account_already_registered, message, sender_account)
+        modules.social.send_account_message(account_already_registered, message, sender_address)
 
         logger.info("{}: User has a registered account.  Message sent.".format(datetime.now()))
 
@@ -453,23 +449,20 @@ def account_process(message):
     """
     logger.info("{}: In account process.".format(datetime.now()))
     sender_account_call = (
-        "SELECT account, register FROM users WHERE user_id = {} AND users.from_app = '{}'".format(message['sender_id'],
+        "SELECT address, register FROM users WHERE user_id = {} AND users.from_app = '{}'".format(message['sender_id'],
                                                                                                 message['from_app']))
     account_data = modules.db.get_db_data(sender_account_call)
     if not account_data:
-        sender_account = modules.db.get_spare_account()
-        account_create_call = ("INSERT INTO users (user_id, from_app, user_name, account, register) "
-                               "VALUES(%s, %s, %s, %s, 1)")
-        account_create_values = [message['sender_id'], message['from_app'], message['sender_screen_name'], sender_account]
-        modules.db.set_db_data(account_create_call, account_create_values)
-
+        # Create an account for the user
+        sender_info = modules.db.create_account(message['sender_id'], message['from_app'], message['sender_screen_name'])
+        sender_address = sender_info["address"]
         account_create_text = translations.account_create_text[message['language']]
-        modules.social.send_account_message(account_create_text, message, sender_account)
+        modules.social.send_account_message(account_create_text, message, sender_address)
 
         logger.info("{}: Created an account for the user!".format(datetime.now()))
 
     else:
-        sender_account = account_data[0][0]
+        sender_address = account_data[0][0]
         sender_register = account_data[0][1]
 
         if sender_register == 0:
@@ -479,7 +472,7 @@ def account_process(message):
             modules.db.set_db_data(set_register_call, set_register_values)
 
         account_text = translations.account_text[message['language']]
-        modules.social.send_account_message(account_text, message, sender_account)
+        modules.social.send_account_message(account_text, message, sender_address)
 
         logger.info("{}: Sent the user their account number.".format(datetime.now()))
 
