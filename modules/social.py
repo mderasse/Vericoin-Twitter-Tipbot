@@ -31,6 +31,8 @@ config.read('{}/webhookconfig.ini'.format(os.getcwd()))
 
 # Check the currency of the bot
 CURRENCY = config.get('main', 'currency')
+CURRENCY_NAME = config.get(CURRENCY, 'currency_name')
+CURRENCY_SYMBOL = config.get(CURRENCY, 'currency_symbol')
 
 # Twitter API connection settings
 CONSUMER_KEY = config.get(CURRENCY, 'consumer_key')
@@ -271,12 +273,12 @@ def validate_tip_amount(message):
 
     if Decimal(message['tip_amount']) < Decimal(MIN_TIP):
         try:
-            send_reply(message, translations.min_tip_text[message['language']].format(MIN_TIP, CURRENCY.upper()))
+            send_reply(message, translations.min_tip_text[message['language']].format(MIN_TIP, CURRENCY_SYMBOL))
         except Exception as e:
             logger.info("{}: Error sending reply for a tip below the minimum.".format(datetime.now()))
 
         message['tip_amount'] = -1
-        logger.info("{}: User tipped less than {} {}.".format(datetime.now(), MIN_TIP, CURRENCY.upper()))
+        logger.info("{}: User tipped less than {} {}.".format(datetime.now(), MIN_TIP, CURRENCY_SYMBOL))
         return message
 
     try:
@@ -497,9 +499,9 @@ def validate_total_tip_amount(message):
     """
     logger.info("{}: validating total tip amount".format(datetime.now()))
     if message['sender_balance_raw']['balance'] < (message['total_tip_amount']):
-        send_reply(message, translations.not_enough_text[message['language']].format(CURRENCY.upper(),
+        send_reply(message, translations.not_enough_text[message['language']].format(CURRENCY_SYMBOL,
                                                                                      message['total_tip_amount'],
-                                                                                     CURRENCY.upper()))
+                                                                                     CURRENCY_SYMBOL))
 
         logger.info("{}: User tried to send more than in their account.".format(datetime.now()))
         message['tip_amount'] = -1

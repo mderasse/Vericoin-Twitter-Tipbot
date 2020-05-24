@@ -85,51 +85,51 @@ self_tip_text = {
 }
 # 4
 receiver_tip_text = {
-    'en': '@{0} just sent you a {1} {2} tip! Reply to this DM with !balance to see your new balance.  '
+    'en': '@{0} just sent you a {1:.8f} {2} tip! Reply to this DM with !balance to see your new balance.  '
           'If you have not registered an account, send a reply with !register to get started, or '
           '!help to see a list of commands!  Learn more about {3} at {4}',
-    'es': '¡@{0} acaba de enviarte un tip de {1} {2}! Responde a este mensaje directo con !balance para revisar tu '
+    'es': '¡@{0} acaba de enviarte un tip de {1:.8f} {2}! Responde a este mensaje directo con !balance para revisar tu '
           'nuevo saldo. Si no has registrado una cuenta, responde con !register para comenzar, o con !help para ver '
           'una lista de comandos. Aprende más sobre {3} en {4}',
-    'nl': '@{0} heeft je zojuist een {1} {2} tip gestuurd! Reageer op deze DM met !balance om jouw nieuwe saldo te '
+    'nl': '@{0} heeft je zojuist een {1:.8f} {2} tip gestuurd! Reageer op deze DM met !balance om jouw nieuwe saldo te '
           'zien. Als je nog geen account hebt geregistreerd, stuur dan een antwoord met !register om aan de slag te '
           'gaan, of !help om een lijst met opdrachten te bekijken! Meer informatie over {3} op {4}',
     'ja': '',
-    'zh-t': '@{0} 剛發給您 {1} {2} 小費！在此回覆 “！餘額” 來查詢您賬戶的餘額。如果您還未註冊賬戶，在此回覆 “！註冊” 來註冊，'
+    'zh-t': '@{0} 剛發給您 {1:.8f} {2} 小費！在此回覆 “！餘額” 來查詢您賬戶的餘額。如果您還未註冊賬戶，在此回覆 “！註冊” 來註冊，'
             '或者回覆 “！幫助” 來看指令單。請拜訪 {4} 來了解更多信息。',
-    'zh-s': '@{0} 刚发给您 {1} {2} 小费！在此回复 “！余额” 来看您账户的余额。如果您还未注册账户，在此回复 “！注册” 来注册，或者回复 '
+    'zh-s': '@{0} 刚发给您 {1:.8f} {2} 小费！在此回复 “！余额” 来看您账户的余额。如果您还未注册账户，在此回复 “！注册” 来注册，或者回复 '
             '“！帮助” 来看指令单。请访问 {4} 来了解更多信息。',
-    'fr': '@{0} vient de vous envoyer un tip de {1} {2}! Veuillez répondre à ce message en envoyant !balance afin de '
+    'fr': '@{0} vient de vous envoyer un tip de {1:.8f} {2}! Veuillez répondre à ce message en envoyant !balance afin de '
           'voir votre solde. Si vous ne disposez pas encore de compte, veuillez répondre avec !register afin de vous '
           'inscrire, ou !help afin de recevoir une liste avec d\'autres fonctions! Voir {4} afin d\'en '
           'savoir plus.',
-    'pt': '@{0} enviou-te uma tip de {1} {2} agora mesmo! Responde a esta mensagem direta com !balance para '
+    'pt': '@{0} enviou-te uma tip de {1:.8f} {2} agora mesmo! Responde a esta mensagem direta com !balance para '
           'verificares o teu saldo. Se ainda não estás registado, responde com !register para começar, ou !help '
           'para uma lista de comandos. Aprende mais sobre o {3} em {4}',
     'th': '',
     'de': '',
-    'id': '@{0} baru saja mengirimi Anda {1} tip {2}! Balas DM ini dengan !balance untuk melihat saldo baru Anda. '
+    'id': '@{0} baru saja mengirimi Anda {1:.8f} tip {2}! Balas DM ini dengan !balance untuk melihat saldo baru Anda. '
           'Jika Anda belum mendaftarkan akun, kirim balasan dengan !register untuk memulai, atau !help untuk melihat '
           'daftar perintah! Pelajari lebih lanjut tentang {3} di {4}',
     'vt': '',
-    'ru': '@{0} только что отправил вам {1} {2} тип! Ответьте на этот DM с помощью  !баланс, чтобы увидеть '
+    'ru': '@{0} только что отправил вам {1:.8f} {2} тип! Ответьте на этот DM с помощью  !баланс, чтобы увидеть '
           'ваш новый баланс. Если вы еще не зарегистрировали учетную запись, отправьте ответ с сообщением !регистрация '
           'для начала или !помощь, чтобы увидеть список команд! Узнайте больше о {3} на {4}',
     'sv': '',
-    'it': '@{0} ti ha inviato una mancia di {1} {2}! Rispondi a questo DM con !balance per vedere il tuo saldo. '
+    'it': '@{0} ti ha inviato una mancia di {1:.8f} {2}! Rispondi a questo DM con !balance per vedere il tuo saldo. '
           'Se non hai registrato un account, invia una risposta con !register per cominciare, o !help per vedere una '
           'lista dei comandi! Per saperne di più su {3} visita {4}',
-    'tr': '@{0} az önce size {1} {2} tip yolladı. Yeni bakiyenizi görmek için bu DM\'e  !balance koduyla cevap verin. '
+    'tr': '@{0} az önce size {1:.8f} {2} tip yolladı. Yeni bakiyenizi görmek için bu DM\'e  !balance koduyla cevap verin. '
           'Eğer kayıtlı bir kullanıcı değilseniz, cevap olarak !register yazarak, ya da komut listesini görmek için '
           '!help yazarak başlayabilirsiniz. Hakkında daha fazlası için {3} at {4}',
-    'pt-br': '@{0} acabou de lhe enviar {1} gorjetas em {2}! Responda a este DM com !balance para ver o seu novo '
+    'pt-br': '@{0} acabou de lhe enviar {1:.8f} gorjetas em {2}! Responda a este DM com !balance para ver o seu novo '
              'saldo. Se você não registrou a sua conta, envie !register para começar, ou !help para ver uma lista de '
              'comandos! Saiba mais sobre {3} em {4}',
-    'bg': '@{0} ви изпрати {1} {2} тип! Отговорете на този DM с !balance за да видите новия баланс.  Ако не сте '
+    'bg': '@{0} ви изпрати {1:.8f} {2} тип! Отговорете на този DM с !balance за да видите новия баланс.  Ако не сте '
           'регистрирали акаунт, изпратете отговор с !register за да започнете, или !help да видите листа с '
           'командите!  Повече инфо за  {3} на {4}',
     'fa': 'در همین لحظه مقدار\n'
-          '{1} {2}\n'
+          '{1:.8f} {2}\n'
           'انعام برای شما ارسال کرد. با استفاده از دستور زیر به این پیام پاسخ دهید تا موجودی جدیدتان را ببینید.\n'
           '!balance\n'
           'اگر تاکنون حساب کاربری‌تان را ثبت نکرده‌اید، برای شروع\n'
@@ -242,36 +242,26 @@ no_users_text = {
 }
 # 8
 multi_tip_success_dm = {
-    'en': 'You have successfully sent your {0} ${1} tips.  '
-          'Check your account at {2}explorer/account/{3}',
-    'es': 'Has enviado exitosamente tus tips de {0} ${1}. Revisa tu cuenta en '
-          '{2}explorer/account/{3}',
-    'nl': 'Je hebt jouw {0} ${1} tips met succes verzonden. Controleer jouw account op '
-          '{2}explorer/account/{3}',
+    'en': 'You have successfully sent your {0} ${1} tips.',
+    'es': 'Has enviado exitosamente tus tips de {0} ${1}.',
+    'nl': 'Je hebt jouw {0} ${1} tips met succes verzonden.',
     'ja': '',
-    'zh-t': '成功發送了{0} ${1} 的小費。您可以在 {2}explorer/account/{3} 觀察您的賬戶。',
-    'zh-s': '成功发送了{0} ${1} 的小费。您可以在 {2}explorer/account/{3} 查看您的账户。',
-    'fr': 'Vous avez envoyé vos tips de {0} ${1} avec succès. Pour voir votre compte veuillez cliquer sur '
-          '{2}explorer/account/{3}',
-    'pt': 'As tuas tips de {0} ${1} cada foram enviadas. Verifica a tua conta em '
-          '{2}explorer/account/{3}',
+    'zh-t': '成功發送了{0} ${1} 的小費。',
+    'zh-s': '成功发送了{0} ${1} 的小费。',
+    'fr': 'Vous avez envoyé vos tips de {0} ${1} avec succès.',
+    'pt': 'As tuas tips de {0} ${1} cada foram enviadas.',
     'th': '',
     'de': '',
-    'id': 'Anda telah berhasil mengirim {0} ${1} tips Anda. Periksa akun Anda di '
-          '{2}explorer/account/{3}',
+    'id': 'Anda telah berhasil mengirim {0} ${1} tips Anda.',
     'vt': '',
-    'ru': 'Вы успешно отправили свои {0} ${1} тип. Проверьте свой адрес на '
-          '{2}explorer/account/{3} ',
+    'ru': 'Вы успешно отправили свои {0} ${1} тип.',
     'sv': '',
-    'it': 'Hai inviato con successo le tue mance di {0} ${1}. Controlla il tuo account su '
-          '{2}explorer/account/{3}',
-    'tr': 'Başarılı bir şekilde {0} ${1} tip yolladınız. Hesabınızı kontrol etmek için {2}/account/{3}',
-    'pt-br': 'Você enviou com sucesso suas {0} gorjetas em ${1}. Verifique sua conta em {2}explorer/account/{3}',
-    'bg': 'Вие успешно изпратихте вашия {0} ${1} тип.  Проверете вашия акаунт на {2}explorer/account/{3}',
+    'it': 'Hai inviato con successo le tue mance di {0} ${1}.',
+    'tr': 'Başarılı bir şekilde {0} ${1} tip yolladınız.',
+    'pt-br': 'Você enviou com sucesso suas {0} gorjetas em ${1}.',
+    'bg': 'Вие успешно изпратихте вашия {0} ${1} тип.',
     'fa': 'شما با موفقیت انعام‌های خود را\n'
-          '{0} ${1}\n'
-          'ارسال نموده‌اید. حساب خود را چک نمائید:\n'
-          '{2}/account/{3} '
+          '{0} ${1}\n',
 }
 multi_tip_success = {
     'en': 'You have successfully sent your {0} ${1} tips.',
@@ -297,59 +287,49 @@ multi_tip_success = {
 }
 # 9
 tip_success_dm = {
-    'en': 'You have successfully sent your {0} ${1} tip.  '
-          'Check out this transaction at {2}explorer/block/{3}',
-    'es': 'Has enviado exitosamente tu tip de {0} ${1}. Verifica esta transacción en '
-          '{2}explorer/block/{3}',
-    'nl': 'Je hebt jouw {0} ${1} tip succesvol verzonden. Bekijk deze transactie op '
-          '{2}explorer/block/{3}',
+    'en': 'You have successfully sent your {0} ${1} tip.',
+    'es': 'Has enviado exitosamente tu tip de {0} ${1}.',
+    'nl': 'Je hebt jouw {0} ${1} tip succesvol verzonden.',
     'ja': '',
-    'zh-t': '成功發送了{0} ${1} 的小費。您可以在 {2}explorer/block/{3} 查看這筆交易。',
-    'zh-s': '成功发送了{0} ${1} 的小费。您可以在 {2}explorer/block/{3} 查看这笔交易。',
-    'fr': 'Vous avez envoyé votre tip de {0} ${1} avec succès. Vous pouvez voir la transaction en cliquant sur '
-          '{2}explorer/block/{3}',
-    'pt': 'A tua tip de {0} ${1} foi enviada com sucesso. Verifica esta transação em '
-          '{2}explorer/block/{3}',
+    'zh-t': '成功發送了{0} ${1} 的小費。',
+    'zh-s': '成功发送了{0} ${1} 的小费。',
+    'fr': 'Vous avez envoyé votre tip de {0} ${1} avec succès.',
+    'pt': 'A tua tip de {0} ${1} foi enviada com sucesso.',
     'th': '',
     'de': '',
-    'id': 'Anda telah berhasil mengirim tip {0} ${1} Anda. Lihat transaksi ini di '
-          '{2}explorer/block/{3}',
+    'id': 'Anda telah berhasil mengirim tip {0} ${1} Anda.',
     'vt': '',
-    'ru': 'Вы успешно отправили свой {0} ${1} тип. Проверьте эту транзакцию на '
-          '{2}explorer/block/{3}',
+    'ru': 'Вы успешно отправили свой {0} ${1} тип.',
     'sv': '',
-    'it': 'Hai inviato con successo la tua mancia di {0} ${1}. Controlla questa transazione su '
-          '{2}explorer/block/{3}',
-    'tr': 'Başarılı bir şekilde {0} ${1} tip yolladınız. Bu işlemi kontrol etmek için {2}explorer/block/{3}',
-    'pt-br': 'Você enviou com sucesso suas {0} gorjetas em ${1}. Confira esta transação em {2}explorer/block/{3}',
-    'bg': 'Вие успешно изпратихте вашия {0} ${1} тип.  Проверете транзакцията на {2}explorer/block/{3}',
+    'it': 'Hai inviato con successo la tua mancia di {0} ${1}.',
+    'tr': 'Başarılı bir şekilde {0} ${1} tip yolladınız.',
+    'pt-br': 'Você enviou com sucesso suas {0} gorjetas em ${1}.',
+    'bg': 'Вие успешно изпратихте вашия {0} ${1} тип.',
     'fa': 'شما با موفقیت انعام خود را\n'
-          '{0} ${1}\n'
-          'ارسال نموده‌اید. این تراکنش را چک نمائید:\n'
-          '{2}explorer/block/{3}'
+          '{0} ${1}\n',
 }
 
 tip_success = {
-    'en': 'You have successfully sent your {0} ${1} tip. Hash: {3}',
-    'es': 'Has enviado exitosamente tu tip de {0} ${1}. Hash: {3}',
-    'nl': 'Je hebt jouw {0} ${1} tip succesvol verzonden. Hash: {3}',
+    'en': 'You have successfully sent your {0} ${1} tip.',
+    'es': 'Has enviado exitosamente tu tip de {0} ${1}.',
+    'nl': 'Je hebt jouw {0} ${1} tip succesvol verzonden.',
     'ja': '',
-    'zh-t': '成功發送了{0} ${1} 的小費。您可以在 {2}explorer/block/{3} 查看這筆交易。',
-    'zh-s': '成功发送了{0} ${1} 的小费。您可以在 {2}explorer/block/{3} 查看这笔交易。',
-    'fr': 'Vous avez envoyé votre tip de {0} ${1} avec succès. Hash: {3}',
-    'pt': 'A tua tip de {0} ${1} foi enviada com sucesso. Hash: {3}',
+    'zh-t': '成功發送了{0} ${1} 的小費。',
+    'zh-s': '成功发送了{0} ${1} 的小费。',
+    'fr': 'Vous avez envoyé votre tip de {0} ${1} avec succès.',
+    'pt': 'A tua tip de {0} ${1} foi enviada com sucesso.',
     'th': '',
     'de': '',
-    'id': 'Anda telah berhasil mengirim tip {0} ${1} Anda. Hash: {3}',
+    'id': 'Anda telah berhasil mengirim tip {0} ${1} Anda.',
     'vt': '',
-    'ru': 'Вы успешно отправили свой {0} ${1} тип. Hash: {3}',
+    'ru': 'Вы успешно отправили свой {0} ${1} тип.',
     'sv': '',
-    'it': 'Hai inviato con successo la tua mancia di {0} ${1}. Hash: {3}',
-    'tr': 'Başarılı bir şekilde {0} ${1} tip yolladınız. Hash: {3}',
-    'pt-br': 'Você enviou com sucesso suas {0} gorjetas em ${1}. Hash: {3}',
-    'bg': 'Вие успешно изпратихте вашия {0} ${1} тип. Hash: {3}',
+    'it': 'Hai inviato con successo la tua mancia di {0} ${1}.',
+    'tr': 'Başarılı bir şekilde {0} ${1} tip yolladınız.',
+    'pt-br': 'Você enviou com sucesso suas {0} gorjetas em ${1}.',
+    'bg': 'Вие успешно изпратихте вашия {0} ${1} тип.',
     'fa': 'شما با موفقیت انعام خود را ارسال نموده اید. این تراکنش و مقدار ارسالی را در اینجا چک نمائید:\n'
-          '{0} ${1}.  Hash: {3}'
+          '{0} ${1}.'
 }
 # 10
 not_a_number_text = {
@@ -1143,34 +1123,34 @@ not_enough_balance_text = {
 # 25
 withdraw_text = {
     'en': 'You have successfully withdrawn {0} {1}!  You can check the transaction at '
-          '{2}explorer/block/{3}',
+          '{2}tx.dws?{3}.html',
     'es': '¡Has retirado con éxito {0} {1}! Puedes verificar la transacción en '
-          '{2}explorer/block/{3}',
+          '{2}tx.dws?{3}.html',
     'nl': 'Je hebt met succes {0} {1} opgenomen! Je kan de transactie bekijken op '
-          '{2}explorer/block/{3}',
+          '{2}tx.dws?{3}.html',
     'ja': '',
-    'zh-t': '您已成功提取{0} {1}！您可以在 {2}explorer/block/{3} 查看交易記錄。',
-    'zh-s': '您已成功提取{0} {1}！您可以在 {2}explorer/block/{3} 查看交易记录。',
+    'zh-t': '您已成功提取{0} {1}！您可以在 {2}tx.dws?{3}.html 查看交易記錄。',
+    'zh-s': '您已成功提取{0} {1}！您可以在 {2}tx.dws?{3}.html 查看交易记录。',
     'fr': 'Vous avez retiré {0} {1} avec succès! Vous pouvez consulter la transaction à partir de '
-          '{2}explorer/block/{3}',
-    'pt': 'Enviaste {0} {1} com sucesso! Verifica a transação em {2}explorer/block/{3}',
+          '{2}tx.dws?{3}.html',
+    'pt': 'Enviaste {0} {1} com sucesso! Verifica a transação em {2}tx.dws?{3}.html',
     'th': '',
     'de': '',
     'id': 'Anda telah berhasil menarik {0} {1}! Anda dapat memeriksa transaksi di '
-          '{2}explorer/block/{3}',
+          '{2}tx.dws?{3}.html',
     'vt': '',
     'ru': 'Вы успешно отправили {0} {1}! Вы можете проверить транзакцию по адресу '
-          '{2}explorer/block/{3}',
+          '{2}tx.dws?{3}.html',
     'sv': '',
     'it': 'Hai prelevato con successo {0} {1}! Puoi controllare la transazione su '
-          '{2}explorer/block/{3}',
-    'tr': 'Başarılı bir şekilde {0} {1} çektiniz. Bu işlemi kontrol etmek için {2}explorer/block/{3}',
-    'pt-br': 'Você retirou com sucesso {0} {1}! Você pode verificar a transação em {2}explorer/block/{3}',
-    'bg': 'Успешно изтеглихте {0} {1}! Можете да проверите транзакцията на адрес {2}explorer/block/{3}',
+          '{2}tx.dws?{3}.html',
+    'tr': 'Başarılı bir şekilde {0} {1} çektiniz. Bu işlemi kontrol etmek için {2}tx.dws?{3}.html',
+    'pt-br': 'Você retirou com sucesso {0} {1}! Você pode verificar a transação em {2}tx.dws?{3}.html',
+    'bg': 'Успешно изтеглихте {0} {1}! Можете да проверите транзакцията на адрес {2}tx.dws?{3}.html',
     'fa': 'شما با موفقیت\n'
           '{0} {1}!\n'
           'برداشت کرده‌اید. می توانید تراکنش را در اینجا چک نمائید:\n'
-          '{2}explorer/block/{3}'
+          '{2}tx.dws?{3}.html'
 }
 # 26
 incorrect_withdraw_text = {
@@ -1260,37 +1240,37 @@ wrong_donate_text = {
 }
 # 28
 large_donate_text = {
-    'en': 'Your balance is only {0} {1} and you tried to send {2}.  Please add more {1} to your account, or lower '
+    'en': 'Your balance is only {0:.8f} {1} and you tried to send {2}.  Please add more {1} to your account, or lower '
           'your donation amount.',
-    'es': 'Tu saldo es de solo {0} {1} e intentaste enviar {2}. Agrega más {1} a tu cuenta, o reduce el monto de '
+    'es': 'Tu saldo es de solo {0:.8f} {1} e intentaste enviar {2}. Agrega más {1} a tu cuenta, o reduce el monto de '
           'tu donación.',
-    'nl': 'Jouw saldo is slechts {0} {1} en je hebt geprobeerd {2} te verzenden. Voeg meer {1} toe aan '
+    'nl': 'Jouw saldo is slechts {0:.8f} {1} en je hebt geprobeerd {2} te verzenden. Voeg meer {1} toe aan '
           'jouw account of verlaag je donatiebedrag.',
     'ja': '',
-    'zh-t': '您的餘額只有{0} {1}，可您在嘗試發送{2} {1}。請給賬戶充值，或降低您的捐款額。',
-    'zh-s': '您的余额只有{0} {1}，可您在尝试发送{2} {1}。请给账户充值，或降低您的捐款额。',
-    'fr': 'Votre solde est de {0} {1} seulement, alors que vous avez essayé d\'envoyer {2}. Veuillez ajouter plus '
+    'zh-t': '您的餘額只有{0:.8f} {1}，可您在嘗試發送{2} {1}。請給賬戶充值，或降低您的捐款額。',
+    'zh-s': '您的余额只有{0:.8f} {1}，可您在尝试发送{2} {1}。请给账户充值，或降低您的捐款额。',
+    'fr': 'Votre solde est de {0:.8f} {1} seulement, alors que vous avez essayé d\'envoyer {2}. Veuillez ajouter plus '
           'de {1} à votre compte, ou diminuez le montant de votre donation. ',
-    'pt': 'O teu saldo é apenas {0} {1} e tentaste enviar {2}. Deposita mais {1} na tua conta, '
+    'pt': 'O teu saldo é apenas {0:.8f} {1} e tentaste enviar {2}. Deposita mais {1} na tua conta, '
           'ou reduz o montante da doação.',
     'th': '',
     'de': '',
-    'id': 'Saldo Anda hanya {0} {1} dan Anda mencoba mengirim {2}. Silakan tambahkan lebih banyak {1} ke '
+    'id': 'Saldo Anda hanya {0:.8f} {1} dan Anda mencoba mengirim {2}. Silakan tambahkan lebih banyak {1} ke '
           'akun Anda, atau turunkan jumlah donasi Anda.',
     'vt': '',
-    'ru': 'Ваш баланс только {0} {1}, и вы пытались отправить {2}. Пожалуйста, добавьте больше {1} в свой аккаунт '
+    'ru': 'Ваш баланс только {0:.8f} {1}, и вы пытались отправить {2}. Пожалуйста, добавьте больше {1} в свой аккаунт '
           'или уменьшите сумму тип.',
     'sv': '',
-    'it': 'Il tuo saldo è di soli {0} {1} e hai provato a inviare {2}. Aggiungi altri {1} al tuo '
+    'it': 'Il tuo saldo è di soli {0:.8f} {1} e hai provato a inviare {2}. Aggiungi altri {1} al tuo '
           'account, o diminuisci l\'importo della donazione.',
-    'tr': 'Bakiyeniz sadece {0} {1} ve siz {2} yollamak istediniz. Lütfen hesabınıza daha fazla {1} ekleyin veya '
+    'tr': 'Bakiyeniz sadece {0:.8f} {1} ve siz {2} yollamak istediniz. Lütfen hesabınıza daha fazla {1} ekleyin veya '
           'bağış miktarınızı azaltın.',
-    'pt-br': 'Seu saldo é somente {0} {1} e você tentou enviar {2}. Por favor, adicione mais {1} à sua conta ou '
+    'pt-br': 'Seu saldo é somente {0:.8f} {1} e você tentou enviar {2}. Por favor, adicione mais {1} à sua conta ou '
              'diminua o valor da sua doação.',
-    'bg': 'Балансът ви е само {0} {1}, а вие сте опитали да изпратите {2}. Моля, добавете още {1} към акаунта си '
+    'bg': 'Балансът ви е само {0:.8f} {1}, а вие сте опитали да изпратите {2}. Моля, добавете още {1} към акаунта си '
           'или намалете сумата на дарението си.',
     'fa': 'موجودی شما تنها\n'
-          '{0} {1}\n'
+          '{0:.8f} {1}\n'
           'می‌باشد و شما تلاش کردید تا\n'
           '{2}\n'
           'ارسال نمائید. لطفاً مقدار بیشتری\n'
@@ -1325,39 +1305,26 @@ small_donate_text = {
 }
 # 30
 donate_text = {
-    'en': 'Thank you for your generosity!  You have successfully donated {0} {1}!  You can check the '
-          'transaction at {2}explorer/block/{3}',
-    'es': '¡Gracias por tu generosidad! Has donado {0} {1} de manera exitosa. Puedes verificar esta transacción en '
-          '{2}explorer/block/{3}',
-    'nl': 'Bedankt voor jouw vrijgevigheid! Je hebt met succes {0} {1} gedoneerd! Je kan de transactie '
-          'bekijken op {2}explorer/block/{3}',
+    'en': 'Thank you for your generosity!  You have successfully donated {0} {1}!',
+    'es': '¡Gracias por tu generosidad! Has donado {0} {1} de manera exitosa.',
+    'nl': 'Bedankt voor jouw vrijgevigheid! Je hebt met succes {0} {1} gedoneerd!',
     'ja': '',
-    'zh-t': '謝謝您慷慨的捐款！您成功捐款了 {0} {1}！可以在{2}explorer/block/{3} 審核捐款記錄。',
-    'zh-s': '谢谢您慷慨的捐款！您成功捐款了 {0} {1}！可以在{2}explorer/block/{3} 审核捐款记录。',
-    'fr': 'Merci beaucoup pour votre générosité! Vous avez donné {0} {1} avec succès! Vous pouvez consulter la '
-          'transaction à partir de {2}explorer/block/{3}',
-    'pt': 'Obrigado pela tua generosidade, doaste {0} {1} com sucesso! Verifica a transação em '
-          '{2}explorer/block/{3}',
+    'zh-t': '謝謝您慷慨的捐款！您成功捐款了 {0} {1}！',
+    'zh-s': '谢谢您慷慨的捐款！您成功捐款了 {0} {1}！',
+    'fr': 'Merci beaucoup pour votre générosité! Vous avez donné {0} {1} avec succès!',
+    'pt': 'Obrigado pela tua generosidade, doaste {0} {1} com sucesso!',
     'th': '',
     'de': '',
-    'id': 'Terima kasih atas kedermawanan Anda! Anda telah berhasil menyumbang {0} {1}! Anda dapat memeriksa '
-          'transaksi di {2}explorer/block/{3}',
+    'id': 'Terima kasih atas kedermawanan Anda! Anda telah berhasil menyumbang {0} {1}!',
     'vt': '',
-    'ru': 'Благодарим вас за щедрость! Вы успешно пожертвовали {0} {1}! Вы можете проверить '
-          'транзакцию по адресу {2}explorer/block/{3}',
+    'ru': 'Благодарим вас за щедрость! Вы успешно пожертвовали {0} {1}!',
     'sv': '',
-    'it': 'Grazie della tua generosità! Hai inviato con successo {0} {1}! Puoi controllare la transazione su '
-          '{2}explorer/block/{3}',
-    'tr': 'Cömertliğiniz için teşekkürler! Başarılı bir şekilde {0} {1}! bağışladınız. Bu işlemi kontrol etmek için '
-          '{2}explorer/block/{3}',
-    'pt-br': 'Obrigado pela sua generosidade! Você doou com sucesso {} {1}! Você pode verificar a transação em '
-             '{2}explorer/block/{3}',
-    'bg': 'Благодаря ви за щедростта! Успешно дарихте {0} {1}! Можете да проверите транзакцията на адрес '
-          '{2}explorer/block/{3}',
+    'it': 'Grazie della tua generosità! Hai inviato con successo {0} {1}!',
+    'tr': 'Cömertliğiniz için teşekkürler! Başarılı bir şekilde {0} {1}!',
+    'pt-br': 'Obrigado pela sua generosidade! Você doou com sucesso {} {1}!',
+    'bg': 'Благодаря ви за щедростта! Успешно дарихте {0} {1}!',
     'fa': 'از شما بخاطر سخاوت‌تان تشکر می‌کنیم! شما با موفقیت\n'
           '{0} {1}\n'
-          'اهدا کردید! شما می‌توانید تراکنش را در اینجا چک نمائید:\n'
-          '{2}explorer/block/{3}'
 }
 # 31
 incorrect_donate_text = {
@@ -1614,28 +1581,6 @@ set_return_invalid_account = {
     'pt-br': 'Error: Invalid account number.  Please resend with a valid account.',
     'bg': 'Error: Invalid account number.  Please resend with a valid account.',
     'fa': 'Error: Invalid account number.  Please resend with a valid account.'
-}
-# 39
-set_return_success = {
-    'en': 'You have successfully set your return address to {0}',
-    'es': 'You have successfully set your return address to {0}',
-    'nl': 'You have successfully set your return address to {0}',
-    'ja': 'You have successfully set your return address to {0}',
-    'zh-t': 'You have successfully set your return address to {0}',
-    'zh-s': 'You have successfully set your return address to {0}',
-    'fr': 'You have successfully set your return address to {0}',
-    'pt': 'You have successfully set your return address to {0}',
-    'th': 'You have successfully set your return address to {0}',
-    'de': 'You have successfully set your return address to {0}',
-    'id': 'You have successfully set your return address to {0}',
-    'vt': 'You have successfully set your return address to {0}',
-    'ru': 'You have successfully set your return address to {0}',
-    'sv': 'You have successfully set your return address to {0}',
-    'it': 'You have successfully set your return address to {0}',
-    'tr': 'You have successfully set your return address to {0}',
-    'pt-br': 'You have successfully set your return address to {0}',
-    'bg': 'You have successfully set your return address to {0}',
-    'fa': 'You have successfully set your return address to {0}'
 }
 #40
 unsupported_fiat = {
@@ -1959,36 +1904,6 @@ private_tip_commands = {
 
 auto_donate_commands = {
     'en': ['!setdonation', '!sd', '/setdonation', '/sd'],
-    'es': [
-        # Users said they would prefer english commands
-    ],
-    'nl': [
-        # Users said they would prefer english commands
-    ],
-    'ja': [],
-    'zh-t': [],
-    'zh-s': [],
-    'fr': [
-        # Users said they would prefer english commands
-    ],
-    'pt': [],
-    'th': [],
-    'de': [],
-    'id': [
-        # Users said they would prefer english commands
-    ],
-    'vt': [],
-    'ru': [],
-    'sv': [],
-    'it': [],
-    'tr': [],
-    'pt-br': [],
-    'bg': [],
-    'fa': []
-}
-
-set_return_commands = {
-    'en': ['!setreturn', '!sr', '/setreturn', '/sr'],
     'es': [
         # Users said they would prefer english commands
     ],

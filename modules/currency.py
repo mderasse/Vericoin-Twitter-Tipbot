@@ -29,17 +29,6 @@ config.read('{}/webhookconfig.ini'.format(os.getcwd()))
 # Check the currency of the bot
 CURRENCY = config.get('main', 'currency')
 
-# Constants
-RE_EMOJI = re.compile('[\U00010000-\U0010ffff\U000026A1]', flags=re.UNICODE)
-
-def strip_emoji(text):
-    """
-    Remove Emojis from tweet text to prevent issues with logging
-    """
-    logger.info('{}: removing emojis'.format(datetime.now()))
-    text = str(text)
-    return RE_EMOJI.sub(r'', text)
-
 
 def get_fiat_conversion(symbol, fiat_amount):
     """

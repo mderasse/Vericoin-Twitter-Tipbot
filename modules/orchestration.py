@@ -246,20 +246,6 @@ def parse_action(message):
         else:
             return '', HTTPStatus.OK
 
-    elif message['dm_action'] in translations.set_return_commands['en'] or \
-            message['dm_action'] in translations.set_return_commands[message['language']]:
-        logger.info("set return address command identified")
-        new_pid = os.fork()
-        if new_pid == 0:
-            try:
-                set_return_address_process(message)
-            except Exception as e:
-                logger.info(
-                    "{}: Exception in set_return_address_process section of parse_action: {}".format(datetime.now(), e))
-            os._exit(0)
-        else:
-            return '', HTTPStatus.OK
-
     else:
         new_pid = os.fork()
         if new_pid == 0:
@@ -510,14 +496,14 @@ def withdraw_process(message):
             balance_return = rpc.get_account_balance(sender_account)
 
             if len(message['dm_array']) == 2:
-                receiver_account = message['dm_array'][1].lower()
+                receiver_address = message['dm_array'][1].lower()
             else:
-                receiver_account = message['dm_array'][2].lower()
+                receiver_address = message['dm_array'][2].lower()
 
-            if rpc.validate_address(receiver_account) is True:
+            if rpc.validate_address(receiver_address) is True:
                 modules.social.send_dm(message['sender_id'], translations.invalid_account_text[message['language']],
                                        message['from_app'])
-                logger.info("{}: The address is invalid: {}".format(datetime.now(), receiver_account))
+                logger.info("{}: The address is invalid: {}".format(datetime.now(), receiver_address))
 
             elif balance_return['balance'] == 0:
                 modules.social.send_dm(message['sender_id'], translations.no_balance_text[message['language']]
@@ -538,7 +524,7 @@ def withdraw_process(message):
                     if Decimal(withdraw_amount_raw) > Decimal(balance_return['balance']):
                         modules.social.send_dm(message['sender_id'],
                                                translations.not_enough_balance_text[message['language']].format(
-                                                   CURRENCY),
+                                                   CURRENCY_SYMBOL),
                                                message['from_app'])
                         return
                 else:
@@ -547,11 +533,13 @@ def withdraw_process(message):
                 
                 # XXX - Send balance to account
                 #
-                #logger.info("{}: send_hash = {}".format(datetime.now(), send_hash))
+                send_hash = rpc.send_from(sender_account, receiver_address, withdraw_amount_raw)
+
+                logger.info("{}: send_hash = {}".format(datetime.now(), send_hash))
                 # respond that the withdraw has been processed
-                #modules.social.send_dm(message['sender_id'], translations.withdraw_text[message['language']]
-                #                       .format(withdraw_amount, CURRENCY, EXPLORER, send_hash), message['from_app'])
-                #logger.info("{}: Withdraw processed.  Hash: {}".format(datetime.now(), send_hash))
+                modules.social.send_dm(message['sender_id'], translations.withdraw_text[message['language']]
+                                       .format(withdraw_amount, CURRENCY_SYMBOL, EXPLORER, send_hash), message['from_app'])
+                logger.info("{}: Withdraw processed.  Hash: {}".format(datetime.now(), send_hash))
     else:
         modules.social.send_dm(message['sender_id'],
                                translations.incorrect_withdraw_text[message['language']].format(BOT_ACCOUNT,
@@ -593,7 +581,7 @@ def donate_process(message):
             modules.social.send_dm(message['sender_id'],
                                    translations.large_donate_text[message['language']]
                                    .format(balance,
-                                           CURRENCY.upper(),
+                                           CURRENCY_NAME,
                                            Decimal(send_amount)),
                                    message['from_app'])
             logger.info("{}: User tried to donate more than their balance.".format(datetime.now()))
@@ -611,14 +599,11 @@ def donate_process(message):
             else:
                 send_amount_raw = Decimal(send_amount)
             logger.info(('{}; send_amount_raw: {}'.format(datetime.now(), int(send_amount_raw))))
-            # XXX - Need to send donation
 
-            #logger.info("{}: send_hash = {}".format(datetime.now(), send_hash))
-
-            #modules.social.send_dm(message['sender_id'], translations.donate_text[message['language']]
-            #                       .format(send_amount, CURRENCY, EXPLORER, send_hash), message['from_app'])
-            #logger.info("{}: {} coin donation processed.  Hash: {}".format(datetime.now(), Decimal(send_amount),
-            #                                                                send_hash))
+            rpc.move(sender_account, receiver_account, send_amount_raw)
+            modules.social.send_dm(message['sender_id'], translations.donate_text[message['language']]
+                                   .format(send_amount, CURRENCY_SYMBOL), message['from_app'])
+            logger.info("{}: {} coin donation processed.  ".format(datetime.now(), Decimal(send_amount)))
 
     else:
         modules.social.send_dm(message['sender_id'], translations.incorrect_donate_text[message['language']],
@@ -654,82 +639,45 @@ def tip_process(message, users_to_tip, request_json):
     if message['tip_amount'] <= 0:
         return
 
-#    for t_index in range(0, len(users_to_tip)):
-        # XXX - Send tip like modules.currency.send_tip(message, users_to_tip, t_index)
+    for t_index in range(0, len(users_to_tip)):
+        rpc.send_tip(message, users_to_tip, t_index)
         
 
     # Inform the user that all tips were sent.
     if len(users_to_tip) >= 2:
         try:
             modules.social.send_reply(message, translations.multi_tip_success[message['language']]
-                                      .format(message['tip_amount_text'], CURRENCY.upper(), EXPLORER,
+                                      .format(message['tip_amount_text'], CURRENCY_SYMBOL,
                                               message['sender_account']))
             modules.social.send_dm(message['sender_id'],
                                    translations.multi_tip_success_dm[message['language']].format(
                                        message['tip_amount_text'],
-                                       CURRENCY.upper(), EXPLORER,
+                                       CURRENCY_SYMBOL,
                                        message['sender_account']),
                                    message['from_app'])
         except KeyError:
             modules.social.send_reply(message, translations.multi_tip_success['en']
-                                      .format(message['tip_amount_text'], CURRENCY.upper(), EXPLORER,
+                                      .format(message['tip_amount_text'], CURRENCY_SYMBOL,
                                               message['sender_account']))
             modules.social.send_dm(message['sender_id'],
                                    translations.multi_tip_success_dm['en'].format(message['tip_amount_text'],
-                                                                                  CURRENCY.upper(), EXPLORER,
+                                                                                  CURRENCY_SYMBOL,
                                                                                   message['sender_account']),
                                    message['from_app'])
 
     elif len(users_to_tip) == 1:
         try:
             modules.social.send_reply(message, translations.tip_success[message['language']]
-                                      .format(message['tip_amount_text'], CURRENCY.upper(), EXPLORER,
-                                              message['send_hash']))
+                                      .format(message['tip_amount_text'], CURRENCY_SYMBOL))
             if message['from_app'] != 'twitter':
                 modules.social.send_dm(message['sender_id'], translations.tip_success_dm[message['language']]
-                                       .format(message['tip_amount_text'], CURRENCY.upper(), EXPLORER,
-                                               message['send_hash']), message['from_app'])
+                                       .format(message['tip_amount_text'], CURRENCY_SYMBOL), message['from_app'])
         except KeyError:
             modules.social.send_reply(message, translations.tip_success['en']
-                                      .format(message['tip_amount_text'], CURRENCY.upper(), EXPLORER,
-                                              message['send_hash']))
+                                      .format(message['tip_amount_text'], CURRENCY_SYMBOL))
             if message['from_app'] != 'twitter':
                 modules.social.send_dm(message['sender_id'], translations.tip_success_dm['en']
-                                       .format(message['tip_amount_text'], CURRENCY.upper(), EXPLORER,
-                                               message['send_hash']), message['from_app'])
-
-
-def set_return_address_process(message):
-    """
-    Sets the return address for inactive accounts.
-    """
-    logger.info("return address process activated.")
-    if len(message['dm_array']) <= 1:
-        modules.social.send_dm(message['sender_id'],
-                               translations.set_return_invalid_account[message['language']],
-                               message['from_app'])
-        return
-
-    
-    if rpc.validate_address(message['dm_array'][1]) is False:
-        modules.social.send_dm(message['sender_id'],
-                               translations.set_return_invalid_account[message['language']],
-                               message['from_app'])
-        return
-    else:
-        set_return_address_call = "UPDATE return_address SET account = %s WHERE from_app = %s AND user_id = %s "
-        set_return_address_values = [message['dm_array'][1], message['from_app'], message['sender_id']]
-        logger.info("set_return_address_call: {}".format(set_return_address_call))
-        logger.info("set_return_address_values: {}".format(set_return_address_values))
-        modules.db.set_db_data(set_return_address_call, set_return_address_values)
-        logger.info("{}: {} return address set for user {} as {}".format(datetime.now(),
-                                                                          message['from_app'],
-                                                                          message['sender_id'],
-                                                                          message['dm_array'][1]))
-        modules.social.send_dm(message['sender_id'],
-                               translations.set_return_success[message['language']].format(message['dm_array'][1]),
-                               message['from_app'])
-    return
+                                       .format(message['tip_amount_text'], CURRENCY_SYMBOL), message['from_app'])
 
 
 def language_process(message, new_language):
