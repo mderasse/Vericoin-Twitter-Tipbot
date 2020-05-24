@@ -44,6 +44,8 @@ config.read('webhookconfig.ini')
 
 # Check the currency of the bot
 CURRENCY = config.get('main', 'currency')
+CURRENCY_NAME = config.get(CURRENCY, 'currency_name')
+CURRENCY_SYMBOL = config.get(CURRENCY, 'currency_symbol')
 
 # Twitter API connection settings
 CONSUMER_KEY = config.get(CURRENCY, 'consumer_key')
@@ -91,7 +93,7 @@ if TELEGRAM_KEY != 'none':
 def tutorial():
     tip_command = '!tip'
 
-    return render_template('tutorial.html', currency=CURRENCY, bot_id=BOT_ID_TWITTER, bot_name_twitter=BOT_NAME_TWITTER, tip_command=tip_command)
+    return render_template('tutorial.html', currency=CURRENCY, currency_name=CURRENCY_NAME, currency_symbol=CURRENCY_SYMBOL, bot_id=BOT_ID_TWITTER, bot_name_twitter=BOT_NAME_TWITTER, tip_command=tip_command)
 
 @app.route('/tippers')
 @app.route('/tippers.html')
@@ -122,7 +124,7 @@ def tippers():
     logger.info("largest_tip: {}".format(largest_tip))
     top_tipper_date = top_tipper[0][4].date()
     return render_template('tippers.html', tipper_table=tipper_table, top_tipper=top_tipper,
-                           top_tipper_date=top_tipper_date, currency=CURRENCY, explorer=EXPLORER)
+                           top_tipper_date=top_tipper_date, currency=CURRENCY, currency_name=CURRENCY_NAME, currency_symbol=CURRENCY_SYMBOL, explorer=EXPLORER)
 
 
 @app.route('/tiplist')
@@ -130,7 +132,7 @@ def tip_list():
     tip_list_call = ("SELECT DISTINCT t1.user_name AS 'Sender ID', t2.user_name AS 'Receiver ID', t1.amount, "
                      "t1.address AS 'Sender Account', t2.address AS 'Receiver Account', t1.from_app, t1.timestamp "
                      "FROM "
-                     "(SELECT user_name, amount, account, address, a.from_app, timestamp "
+                     "(SELECT user_name, amount, address, a.from_app, timestamp "
                      "FROM {0}.tip_list AS a, {0}.users AS b "
                      "WHERE user_id = sender_id "
                      "AND user_name IS NOT NULL "
@@ -148,7 +150,7 @@ def tip_list():
                      "LIMIT 20) AS t2 "
                      "ON t1.timestamp = t2.timestamp".format(DB_SCHEMA))
     tip_list_table = modules.db.get_db_data(tip_list_call)
-    return render_template('tiplist.html', tip_list_table=tip_list_table, currency=CURRENCY, explorer=EXPLORER)
+    return render_template('tiplist.html', tip_list_table=tip_list_table, currency=CURRENCY, currency_name=CURRENCY_NAME, currency_symbol=CURRENCY_SYMBOL, explorer=EXPLORER)
 
 
 @app.route('/')
@@ -183,7 +185,7 @@ def index():
 
     return render_template('index.html', total_tipped_coin_table=total_tipped_coin_table,
                            total_tipped_number_table=total_tipped_number_table, total_value_usd=total_value_usd,
-                           price=price, currency=CURRENCY, bot_id=BOT_ID_TWITTER, bot_account=BOT_ACCOUNT,
+                           price=price, currency=CURRENCY, currency_name=CURRENCY_NAME, currency_symbol=CURRENCY_SYMBOL, bot_id=BOT_ID_TWITTER, bot_account=BOT_ACCOUNT,
                            bot_name_twitter=BOT_NAME_TWITTER, bot_name_telegram=BOT_NAME_TELEGRAM,
                            tip_command=tip_command)
 

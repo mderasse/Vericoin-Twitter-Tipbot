@@ -1,16 +1,16 @@
 {% extends "layout.html" %}
 {% block content %}
     <div class="jumbotron" style="display:block;margin-left:auto;margin-right:auto;width:100%">
-      <img src="{{ url_for('static', filename='vrc_tip_bot_logo.jpg') }}" class="ntb-jumbo-img">
+      <img src="{{ url_for('static', filename=currency + '_tip_bot_logo.jpg') }}" class="ntb-jumbo-img">
     </div>
     <div class="container">
-      <p style="text-align:center">The Veri Tip Bot allows users to send the Vericoin cryptocurrency to users using only their Twitter handle.</p>
+      <p style="text-align:center">The {{ currency_name }} Tip Bot allows users to send the {{ currency_name }} cryptocurrency to users using only their Twitter or Telegram handle.</p>
       <br><br>
           <div class="container">
       <div class="card-deck mb-3 text-center">
         <div class="card mb-4 shadow-sm">
           <div class="card-header">
-            <h4 class="my-0 font-weight-normal">Total VRC Tipped</h4>
+            <h4 class="my-0 font-weight-normal">Total {{ currency_name }} Tipped</h4>
           </div>
           <div class="card-body">
               <table class="table table-sm">
@@ -25,12 +25,18 @@
                   </tr>
                 </thead>
                 <tbody>
-                    {% for row in total_tipped_vrc_table %}
+                    {% for row in total_tipped_nano_table %}
                     <tr>
                         {% if row[0] == "twitter" %}
                         <td style="text-align: center;"><span class="fab fa-twitter"></span></td>
                         {% endif %}
-                        <td style="text-align: center;">{{ row[1] }} {{ currency|upper }}</td>
+                        {% if row[0] == "facebook" %}
+                        <td style="text-align: center;"><span class="fab fa-facebook"></span></td>
+                        {% endif %}
+                        {% if row[0] == "telegram" %}
+                        <td style="text-align: center;"><span class="fab fa-telegram"></span></td>
+                        {% endif %}
+                        <td style="text-align: center;">{{ row[1] }} {{ currency_symbol }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -59,6 +65,12 @@
                         {% if row[0] == "twitter" %}
                         <td style="text-align: center;"><span class="fab fa-twitter"></span></td>
                         {% endif %}
+                        {% if row[0] == "facebook" %}
+                        <td style="text-align: center;"><span class="fab fa-facebook"></span></td>
+                        {% endif %}
+                        {% if row[0] == "telegram" %}
+                        <td style="text-align: center;"><span class="fab fa-telegram"></span></td>
+                        {% endif %}
                         <td style="text-align: center;">{{row[1]}}</td>
                     </tr>
                     {% endfor %}
@@ -80,25 +92,26 @@
       <br><br>
       <h4 style="text-align:center">Commands</h4>
       <br>
-      <h5>DM Commands:  The below commands are handled through sending a DM to {{ bot_name_twitter }} on Twitter.  You can click the link next to the command to send a DM to the Twitter bot.</h5>
+      <h5>DM Commands:  The below commands are handled through sending a DM to {{ bot_name_twitter }} on Twitter or {{ bot_name_telegram }} on Telegram.  You can click the link next to the command to send a DM to the Twitter bot.</h5>
       <br>
       <ul>
         <li><a href="https://twitter.com/messages/compose?recipient_id={{ bot_id }}&text=!help">!help</a>: The tip bot will respond to your DM with a list of commands and their functions.  If you forget something, use this to get a hint of how to do it!</li>
-        <li><a href="https://twitter.com/messages/compose?recipient_id={{ bot_id }}&text=!register">!register</a>: The tip bot will create an account, or validate the account that is currently tied to your Twitter.  This will return a message containing your account number.</li>
+        <li><a href="https://twitter.com/messages/compose?recipient_id={{ bot_id }}&text=!register">!register</a>: The tip bot will create an account, or validate the account that is currently tied to your Twitter / Telegram user name.  This will return a message containing your account number.</li>
         <li><a href="https://twitter.com/messages/compose?recipient_id={{ bot_id }}&text=!balance">!balance</a>: Returns the current balance of your account.</li>
-        <li><a href="https://twitter.com/messages/compose?recipient_id={{ bot_id }}&text=!account">!account</a>: Returns the account number tied to your Twitter user name.</li>
-        <li><a href="https://twitter.com/messages/compose?recipient_id={{ bot_id }}&text=!withdraw">!withdraw</a>: Withdraws the balance of your tip account to a specified Vericoin account.  Example: <code>!withdraw {{ bot_account }}</code> will withdraw to account {{ bot_account }}</li>
-        <li><a href="https://twitter.com/messages/compose?recipient_id={{ bot_id }}&text=!donate">!donate</a>: Donates a specified amount from your tip account to the developer.  Example: <code>!donate 1</code> will donate 1 VRC to Developers.  Thanks for your generosity!</li>
+        <li><a href="https://twitter.com/messages/compose?recipient_id={{ bot_id }}&text=!account">!account</a>: Returns the account number tied to your Twitter / Telegram user name.</li>
+        <li><a href="https://twitter.com/messages/compose?recipient_id={{ bot_id }}&text=!withdraw">!withdraw</a>: Withdraws the balance of your tip account to a specified {{ currency|title }} account.  Example: <code>!withdraw {{ bot_account }}</code> will withdraw to account {{ bot_account }}</li>
+        <li><a href="https://twitter.com/messages/compose?recipient_id={{ bot_id }}&text=!donate">!donate</a>: Donates a specified amount from your tip account to the developer.  Example: <code>!donate 1</code> will donate 1 {{ currency|upper }} to the Tip Bot developer.  Thanks for your generosity!</li>
         <li><a href="https://twitter.com/messages/compose?recipient_id={{ bot_id }}&text=!setlanguage">!setlanguage</a>: Change the default language of the bot.  A list of available languages is provided with the <code>!languages</code> command.  Proper use is "!setlanguage Russian" to change your language to Russian. </li>
         <li><a href="https://twitter.com/messages/compose?recipient_id={{ bot_id }}&text=!languages">!languages</a>: Display a list of available languages for translation.</li>
       </ul>
       <br>
-      <h5>Tweet Message Commands: Tips are sent through public tweets, retweets.  These are processed in real time.</h5>
+      <h5>Tweet / Group Message Commands: Tips are sent through public tweets, retweets, and messages in Telegram groups.  These are processed in real time.</h5>
       <br>
       <ul>
-        <li><a href="https://twitter.com/home?status={{ bot_name_twitter }}+{{ tip_command }}+">{{ tip_command }}</a>: Send a tip of a specified amount to a user on Twitter.
+        <li><a href="https://twitter.com/home?status={{ bot_name_twitter }}+{{ tip_command }}+">{{ tip_command }}</a>: Send a tip of a specified amount to a user on Twitter or Telegram.
             <ul>
-                <li>Twitter Example: <code>{{ bot_name_twitter }} {{ tip_command }} 5.01 @mderasse</code> will send a 5.01 VRC tip to user @mderasse.</li>
+                <li>Twitter Example: <code>{{ bot_name_twitter }} {{ tip_command }} 5.01 @mderasse</code> will send a 5.01 {{ currency_symbol }} tip to user @mderasse.</li>
+                <li>Telegram Example: <code>{{ bot_name_telegram }} {{ tip_command }} 19.19 @Mderasse</code> will send a 19.19 {{ currency_symbol }} tip to user @Mderasse</li>
             </ul>
         </li>
       </ul>
