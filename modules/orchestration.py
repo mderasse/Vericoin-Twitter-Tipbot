@@ -496,11 +496,11 @@ def withdraw_process(message):
             balance_return = rpc.get_account_balance(sender_account)
 
             if len(message['dm_array']) == 2:
-                receiver_address = message['dm_array'][1].lower()
+                receiver_address = message['dm_array'][1]
             else:
-                receiver_address = message['dm_array'][2].lower()
+                receiver_address = message['dm_array'][2]
 
-            if rpc.validate_address(receiver_address) is True:
+            if rpc.validate_address(receiver_address) is False:
                 modules.social.send_dm(message['sender_id'], translations.invalid_account_text[message['language']],
                                        message['from_app'])
                 logger.info("{}: The address is invalid: {}".format(datetime.now(), receiver_address))

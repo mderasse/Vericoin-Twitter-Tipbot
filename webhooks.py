@@ -20,6 +20,7 @@ import modules.orchestration
 import modules.rpc as rpc
 import modules.social
 import modules.translations as translations
+from modules.AccountActivity import ActivityAPI
 
 # Set Log File
 logger = logging.getLogger("main_log")
@@ -78,7 +79,7 @@ app = Flask(__name__)
 # Connect to Twitter
 auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
-api = tweepy.API(auth)
+api = ActivityAPI(auth)
 
 # Connect to Telegram
 if TELEGRAM_KEY != 'none':
@@ -129,7 +130,7 @@ def tip_list():
     tip_list_call = ("SELECT DISTINCT t1.user_name AS 'Sender ID', t2.user_name AS 'Receiver ID', t1.amount, "
                      "t1.address AS 'Sender Account', t2.address AS 'Receiver Account', t1.from_app, t1.timestamp "
                      "FROM "
-                     "(SELECT user_name, amount, account, a.from_app, timestamp "
+                     "(SELECT user_name, amount, account, address, a.from_app, timestamp "
                      "FROM {0}.tip_list AS a, {0}.users AS b "
                      "WHERE user_id = sender_id "
                      "AND user_name IS NOT NULL "
@@ -300,6 +301,22 @@ def get_all_users_twitter():
     except Exception as e:
         return e
 
+
+@app.route('/twitter-activity', methods=["GET"])
+def twitterActivity():
+    if request.remote_addr != "127.0.0.1":
+        return "nop", 403
+
+    twitter_hook_url = "{}{}".format(BASE_URL, TWITTER_URI)
+    try:
+        api.enable_activity(env="prod", url=twitter_hook_url)
+    except:
+        webhookapp = api.getWebID(env="prod")
+        api.reenable_activity(env="prod", webhookid=str(webhookapp[0]["id"]))
+    
+    api.subscribe_activity(env="prod", url=twitter_hook_url)
+  
+    return '', 204
 
 @app.route(TWITTER_URI, methods=["GET"])
 def webhook_challenge():
@@ -632,10 +649,11 @@ def twitter_event_received():
         message['sender_id'] = message_object.get('sender_id')
         bot_ids = ['1263594761073483777']
         if message['sender_id'] in bot_ids:
-            return
+            return "you are me"
 
+        # Retrieve user info
         user_info = api.get_user(message['sender_id'])
-        message['sender_screen_name'] = user_info.screen_name
+        message['sender_screen_name'] = user_info["screen_name"]
         message['dm_id'] = dm_object.get('id')
         message['text'] = message_object.get('message_data', {}).get('text')
         message['dm_array'] = message['text'].split(" ")
@@ -656,7 +674,7 @@ def twitter_event_received():
         # Check for action on DM
         modules.orchestration.parse_action(message)
 
-        return '', HTTPStatus.OK
+        return "ok", HTTPStatus.OK
 
     elif 'tweet_create_events' in request_json.keys():
         """
@@ -672,16 +690,16 @@ def twitter_event_received():
 
         message = modules.social.set_message_info(tweet_object, message)
         if message['id'] is None:
-            return '', HTTPStatus.OK
+            return 'ok', HTTPStatus.OK
 
         message = modules.social.check_message_action(message)
         if message['action'] is None:
             logger.info("{}: Mention of veritip bot without a !tip command.".format(datetime.now()))
-            return '', HTTPStatus.OK
+            return 'ok', HTTPStatus.OK
 
         message = modules.social.validate_tip_amount(message)
         if message['tip_amount'] <= 0:
-            return '', HTTPStatus.OK
+            return 'ok', HTTPStatus.OK
 
         if message['action'] != -1 and str(message['sender_id']) != str(BOT_ID_TWITTER):
             new_pid = os.fork()
@@ -707,7 +725,7 @@ def twitter_event_received():
         elif str(message['sender_id']) == str(BOT_ID_TWITTER):
             logger.info("{}: VeriTipBot sent a message.".format(datetime.now()))
 
-        return '', HTTPStatus.OK
+        return 'ok', HTTPStatus.OK
 
     elif 'follow_events' in request_json.keys():
         """
@@ -722,11 +740,11 @@ def twitter_event_received():
 
         modules.orchestration.help_process(message)
 
-        return '', HTTPStatus.OK
+        return 'ok', HTTPStatus.OK
 
     else:
         # Event type not supported
-        return '', HTTPStatus.OK
+        return 'ok', HTTPStatus.OK
 
 
 @app.cli.command('initdb')

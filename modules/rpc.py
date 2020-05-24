@@ -69,9 +69,13 @@ def validate_address(address):
     """
     Validate that the provided address is possible
     """
+    logger.info("{}: validate address {}".format(datetime.now(), address))
+
     result = rpc.validateaddress(address)
 
-    return result["isvalid"] == 'true'
+    logger.info("{}: got {}".format(datetime.now(), result))
+
+    return result["isvalid"]
 
 def generate_new_account():
     """
