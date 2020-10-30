@@ -1,5 +1,8 @@
 import base64
 import configparser
+import requests
+import threading
+import time
 from decimal import Decimal
 import hashlib
 import hmac
@@ -311,12 +314,12 @@ def twitterActivity():
 
     twitter_hook_url = "{}{}".format(BASE_URL, TWITTER_URI)
     try:
-        api.enable_activity(env="prod", url=twitter_hook_url)
+        api.enable_activity(env="production", url=twitter_hook_url)
     except:
-        webhookapp = api.getWebID(env="prod")
-        api.reenable_activity(env="prod", webhookid=str(webhookapp[0]["id"]))
+        webhookapp = api.getWebID(env="production")
+        api.reenable_activity(env="production", webhookid=str(webhookapp[0]["id"]))
     
-    api.subscribe_activity(env="prod", url=twitter_hook_url)
+    api.subscribe_activity(env="production", url=twitter_hook_url)
   
     return '', 204
 
@@ -748,6 +751,23 @@ def twitter_event_received():
         # Event type not supported
         return 'ok', HTTPStatus.OK
 
+def start_runner():
+    def start_loop():
+        not_started = True
+        while not_started:
+            try:
+                r = requests.get('http://127.0.0.1:3003/')
+                if r.status_code == 200:
+                    logger.info("Server started, quiting start_loop")
+                    r = requests.get('http://127.0.0.1:3003/twitter-activity')
+                    not_started = False
+            except:
+                logger.info("Server not yet started")
+            time.sleep(10)
+
+    thread = threading.Thread(target=start_loop)
+    thread.start()
+
 
 @app.cli.command('initdb')
 def initdb_command():
@@ -758,4 +778,5 @@ if __name__ == "__main__":
     modules.db.db_init()
     logger.info("db initialized from wsgi")
     modules.social.telegram_set_webhook()
-    app.run(host='127.0.0.1', port=3003)
+    start_runner()
+    app.run(host='0.0.0.0', port=3003)
